@@ -1,0 +1,8 @@
+{
+  "name": "splitstream",
+  "private": true,
+  "packageManager": "pnpm@9.11.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+# .env holds only safe local-dev defaults and is committed; real keys live in .env.local
+.env.local
+.env.*.local
+supabase/.temp/
+supabase/.branches/
+.DS_Store
+
+.agents/*

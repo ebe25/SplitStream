@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+/* class-based dark mode, toggled on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html { color-scheme: light; }
+  html.dark { color-scheme: dark; }
+
+  body {
+    @apply bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+  }
+
+  /* avoid 300ms double-tap zoom delay on touch */
+  button, a, select, label, input { touch-action: manipulation; }
+}

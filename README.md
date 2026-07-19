@@ -61,7 +61,33 @@ Local Studio (DB browser): http://127.0.0.1:54323
 
 Never put the `service_role` key in any client env file — it bypasses RLS. It belongs only in Edge Function secrets (`supabase secrets set`).
 
-## Tests
+## Tests & scripts
 
-- `supabase test db` — RLS + money math (release blockers)
-- `pnpm test` — Vitest on parser/routing engine, once Phase 1 lands
+- `pnpm test` — Vitest across the workspace (split math + SMS parser, 21 tests)
+- `pnpm test:db` — pgTAP suite: RLS + money math, the release blockers (needs `supabase init` once, then `supabase start`)
+- `pnpm build` — typecheck + production build of the PWA
+- `pnpm sync:functions` — copy the parser into `supabase/functions/_shared/` (run after editing it, before deploying)
+
+CI (`.github/workflows/ci.yml`) runs the unit tests, the web build, and the pgTAP suite on every push.
+
+## SMS ingest (Phase 1)
+
+Deploy (devices auth via `X-Device-Token`, not JWTs). The parser is copied from
+`packages/shared` — after editing it, run `pnpm sync:functions` before deploying.
+`--use-api` because local docker bundling fails on this machine:
+
+```sh
+pnpm sync:functions
+supabase functions deploy ingest-sms --no-verify-jwt --use-api
+```
+
+Test:
+
+```sh
+curl -X POST https://<ref>.supabase.co/functions/v1/ingest-sms \
+  -H 'Content-Type: application/json' \
+  -H 'X-Device-Token: <raw-token-from-settings>' \
+  -d '{"sender":"VM-HDFCBK","body":"Rs.450.00 debited from a/c **1234 ...","received_at":"2026-07-19T10:00:00Z"}'
+```
+
+MacroDroid recipe: Trigger **SMS Received** (sender contains your bank sender IDs) → Action **HTTP Request** POST to `https://<ref>.supabase.co/functions/v1/ingest-sms`, header `X-Device-Token: <raw token>`, JSON body `{"sender":"[sms_sender]","body":"[sms_message]","received_at":"[system_time_iso]"}`.

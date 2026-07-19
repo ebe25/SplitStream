@@ -1,8 +1,10 @@
 import type { Session } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
+import { faGithub, faGoogle } from '@fortawesome/free-brands-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { supabase } from './supabase'
-import { btn, card, errorCls, input, labelCls } from './ui'
+import { btn, btnGhost, card, errorCls, input, labelCls } from './ui'
 
 const AuthCtx = createContext<{ session: Session | null; loading: boolean }>({ session: null, loading: true })
 
@@ -62,6 +64,15 @@ export function AuthPage() {
     if (error) setError(error.message)
   }
 
+  const oauth = async (provider: 'github' | 'google') => {
+    setError('')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: location.origin },
+    })
+    if (error) setError(error.message)
+  }
+
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-8">
       <div className="mb-8 text-center">
@@ -73,6 +84,21 @@ export function AuthPage() {
       </div>
 
       <div className={card}>
+        <div className="space-y-2">
+          <button type="button" className={`${btnGhost} flex w-full items-center justify-center gap-2`} onClick={() => oauth('google')}>
+            <FontAwesomeIcon icon={faGoogle} aria-hidden="true" /> Continue with Google
+          </button>
+          <button type="button" className={`${btnGhost} flex w-full items-center justify-center gap-2`} onClick={() => oauth('github')}>
+            <FontAwesomeIcon icon={faGithub} aria-hidden="true" /> Continue with GitHub
+          </button>
+        </div>
+
+        <div className="my-4 flex items-center gap-3 text-xs text-zinc-400" aria-hidden="true">
+          <span className="h-px grow bg-zinc-200 dark:bg-zinc-800" />
+          or
+          <span className="h-px grow bg-zinc-200 dark:bg-zinc-800" />
+        </div>
+
         {!sent ? (
           <form onSubmit={send} className="space-y-4">
             <div>

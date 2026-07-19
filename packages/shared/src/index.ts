@@ -1,3 +1,5 @@
+export * from './parser'
+
 export type SplitMode = 'equal' | 'exact' | 'percent' | 'shares'
 
 /**

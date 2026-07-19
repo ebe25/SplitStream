@@ -5,6 +5,7 @@ import { AuthPage, AuthProvider, RequireAuth } from './auth'
 import { ExpenseForm } from './pages/ExpenseForm'
 import { GroupDetail } from './pages/GroupDetail'
 import { Groups } from './pages/Groups'
+import { Inbox } from './pages/Inbox'
 import { Join } from './pages/Join'
 import { Personal } from './pages/Personal'
 import { Settings } from './pages/Settings'
@@ -22,6 +23,7 @@ function Shell() {
       <nav className="fixed inset-x-0 bottom-0 flex border-t border-zinc-200 bg-white/90 backdrop-blur pb-[env(safe-area-inset-bottom)] dark:border-zinc-800 dark:bg-zinc-900/90">
         <NavLink to="/" end className={tab}>Groups</NavLink>
         <NavLink to="/personal" className={tab}>Personal</NavLink>
+        <NavLink to="/inbox" className={tab}>Inbox</NavLink>
         <NavLink to="/settings" className={tab}>Settings</NavLink>
       </nav>
     </>
@@ -40,6 +42,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/group/:id/expense/new" element={<ExpenseForm />} />
             <Route path="/join/:code" element={<Join />} />
             <Route path="/personal" element={<Personal />} />
+            <Route path="/inbox" element={<Inbox />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Routes>

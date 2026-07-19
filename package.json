@@ -1,6 +1,12 @@
 {
   "name": "splitstream",
   "private": true,
+  "scripts": {
+    "test": "pnpm -r test",
+    "test:db": "supabase test db",
+    "build": "pnpm --filter web build",
+    "sync:functions": "cp packages/shared/src/parser.ts supabase/functions/_shared/parser.ts"
+  },
   "packageManager": "pnpm@9.11.0",
   "engines": {
     "node": ">=20"

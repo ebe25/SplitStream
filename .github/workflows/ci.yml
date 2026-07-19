@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # reads packageManager from package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @splitstream/shared test
+      # apps/web/.env is committed with local-stack VITE_ vars, so no secrets needed
+      - run: pnpm --filter web build
+
+  db-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # repo has no supabase/config.toml yet; generate one on the fly
+      - run: test -f supabase/config.toml || supabase init --force
+      - run: supabase db start
+      # RLS test failures here are release blockers — do not merge over a red run
+      - run: supabase test db

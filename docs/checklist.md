@@ -10,7 +10,7 @@ _Last updated: 2026-07-19_
 - [x] Supabase CLI installed (2.109.1)
 - [x] Supabase cloud project created + linked (ref `gknezlfpalsrqttuxusn`)
 - [x] `apps/web/.env.local` filled with cloud URL + anon key
-- [ ] GitHub repo + first commit
+- [X] GitHub repo + first commit
 - [ ] `supabase init` (config.toml — needed only for local stack / `supabase test db`)
 - [ ] Vercel project
 
@@ -29,18 +29,21 @@ _Last updated: 2026-07-19_
 - [x] Onboarding: empty Groups state = 3-step welcome (name → first group → invites)
 - [x] Design audit (vercel web-design-guidelines skill): touch-action, focus-visible, labels/autocomplete, theme-color sync
 - [x] vite-plugin-pwa: manifest + service worker + icons; production build green
+- [x] OAuth: GitHub + Google sign-in (Font Awesome brand icons), providers enabled in dashboard, `0002_profile_names.sql` pushed (real names from OAuth metadata)
 - [ ] Replace placeholder icons (solid squares) with real ones
 - [ ] Deploy to Vercel + add URL in Supabase Auth → URL Configuration
 - [ ] Acceptance: two phones, invite → expense → identical simplified debts → settlement zeroes; installs to Android home screen
 - [ ] RLS tests in CI
 
-## Phase 1 — Capture pipeline
-- [ ] `0002_capture.sql`: `devices`, `raw_sms`, `transactions`, `review_items` (owner-only RLS)
-- [ ] Device tokens (mint in Settings, show once, store SHA-256 hash)
-- [ ] `ingest-sms` Edge Function (token auth, idempotency index)
-- [ ] SMS parser in `packages/shared` + `fixtures/sms/` corpus + Vitest
-- [ ] Review inbox screen (assign to Personal / group / Ignore)
-- [ ] MacroDroid recipe on phone
+## Phase 1 — Capture pipeline — CODE DONE + DEPLOYED
+- [x] `0003_capture.sql`: `devices`, `raw_sms`, `transactions`, `review_items` (owner-only RLS) — docker-validated, **pushed to cloud**
+- [x] pgTAP tests for capture tables (`supabase/tests/0003_capture_test.sql`)
+- [x] Device tokens: mint in Settings (32-byte base64url, shown once, SHA-256 hex stored), revoke with confirm
+- [x] `ingest-sms` Edge Function — **deployed** (`--no-verify-jwt --use-api`); 401 on bad token verified live; dedupe via unique index; parser inline
+- [x] SMS parser in `packages/shared`: 8 templates (HDFC/ICICI/SBI/Axis, UPI/card/NEFT), 14 fixtures in `fixtures/sms/corpus.json`, 21 Vitest tests green
+- [x] Review inbox screen + tab (Personal w/ category, Group → prefilled split editor, Ignore, parse-failure dismiss)
+- [x] `pnpm sync:functions` copies parser into functions `_shared/` (bundler can't reach outside `supabase/functions/`)
+- [ ] MacroDroid recipe on phone (steps in README) + mint a device token in Settings
 - [ ] Acceptance: coffee → inbox in seconds; dupes no-op; garbled SMS = parse failure, not silence
 
 ## Phase 2 — Routing engine + push
@@ -69,5 +72,6 @@ _Last updated: 2026-07-19_
 ## Cross-cutting
 - [x] SQL tests for RLS + balance functions (written; run via `supabase test db` after `supabase init`)
 - [x] Vitest on shared money math
-- [ ] CI (RLS tests + Vitest on every push)
+- [x] CI: `.github/workflows/ci.yml` — shared tests + web build + `supabase test db` (pgTAP/RLS as release blocker)
+- [x] Root scripts: `pnpm test` / `test:db` / `build` / `sync:functions` — documented in README
 - [ ] Playwright two-user flow

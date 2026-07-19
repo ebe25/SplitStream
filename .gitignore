@@ -8,3 +8,4 @@ supabase/.branches/
 .DS_Store
 
 .agents/*
+.claude/*

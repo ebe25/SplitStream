@@ -1,6 +1,6 @@
 import { computeSplits, toPaise, toRupees, type SplitMode } from '@splitstream/shared'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useUserId } from '../auth'
 import { supabase } from '../supabase'
 import { btn, card, errorCls, Header, input, labelCls } from '../ui'
@@ -12,9 +12,10 @@ export function ExpenseForm() {
   const { id } = useParams()
   const userId = useUserId()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
   const [members, setMembers] = useState<Member[]>([])
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
+  const [description, setDescription] = useState(params.get('description') ?? '')
+  const [amount, setAmount] = useState(params.get('amount') ?? '')
   const [paidBy, setPaidBy] = useState('')
   const [mode, setMode] = useState<SplitMode>('equal')
   const [included, setIncluded] = useState<Set<string>>(new Set())

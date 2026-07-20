@@ -57,12 +57,15 @@ _Last updated: 2026-07-19_
 - [x] Deployed 2026-07-20: 0004 pushed (local=remote 0001–0004), `ingest-sms` redeployed with routing, VAPID secrets set (3), 401 auth-reject verified live
 - [ ] Acceptance: known merchant silent; housemate VPA → group asking split; unknown = exactly one notification; "always" learns
 
-## Phase 3 — Smart settlements
-- [ ] UPI deep-link buttons (`upi://pay?...`)
-- [ ] Settlement matcher (exact match only at launch)
-- [ ] Credit mirror (incoming ≈ owed → settlement confirmed)
-- [ ] Counterpart confirmation UI
-- [ ] Lifecycle gates in UI (SQL triggers already live)
+## Phase 3 — Smart settlements — CODE DONE, not deployed
+- [x] Grilled + documented: CONTEXT.md glossary, ADR-0001 (recipient confirms; payer-side = pending, recipient-side = confirmed)
+- [x] UPI deep-link buttons (hidden when member has no VPA) + "I paid ✓" (pending, deduped vs SMS matcher)
+- [x] Settlement matcher in `route()` — exact match, 0% tolerance, debit + credit sides (47 tests green)
+- [x] Credit mirror: incoming match confirms existing pending, else creates confirmed
+- [x] Counterpart confirmation UI (recipient Confirm button; payer sees "awaiting confirmation")
+- [x] Lifecycle: `0005_settlements.sql` guard trigger (closed immutable, close requires zero nets) + UI card (any member; docker-validated + pgTAP)
+- [x] Bug fixed: `simplified_debts()` raised under service role — member check now applies only to real user sessions (validated both paths)
+- [x] Deployed 2026-07-20: 0005 pushed (local=remote 0001–0005), `ingest-sms` redeployed with matcher, 401 auth-reject verified live
 - [ ] Acceptance: pay via UPI → settled-pending auto; one-tap confirm
 
 ## Phase 4 — Hardening & reach

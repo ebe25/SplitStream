@@ -12,7 +12,8 @@ const supabase = createClient(
 );
 
 // Build the RouteContext for one user: co-members' VPAs across shared open
-// groups, explicit payee identities, and the user's routing rules.
+// groups, explicit payee identities, the user's routing rules, and exact
+// per-member debt amounts for the settlement matcher.
 async function buildContext(ownerId: string) {
   // (a) owner's open groups
   const { data: mine } = await supabase
@@ -52,13 +53,52 @@ async function buildContext(ownerId: string) {
     };
   }
 
-  // (d) rules
+  // (d) exact amounts the settlement matcher can hit, per (co-member, group):
+  // simplified-debt suggestions plus, in 2-person groups, the raw net.
+  const memberDebts: {
+    member_user_id: string;
+    group_id: string;
+    i_owe_amounts: number[]; // paise
+    owed_to_me_amounts: number[]; // paise
+  }[] = [];
+  const toPaise = (x: unknown) => Math.round(Number(x) * 100);
+  for (const gid of groupIds) {
+    const { data: balances, error: balErr } = await supabase.rpc('group_balances', { gid });
+    if (balErr || !balances) { console.error('group_balances failed', gid, balErr); continue; }
+    const { data: debts, error: debtErr } = await supabase.rpc('simplified_debts', { gid });
+    if (debtErr) console.error('simplified_debts failed', gid, debtErr);
+    const myNet = toPaise(
+      (balances as { user_id: string; net: number }[]).find((b) => b.user_id === ownerId)?.net ?? 0,
+    );
+    const twoPerson = (balances as unknown[]).length === 2;
+    for (const [memberId, gids] of memberGroups) {
+      if (!gids.includes(gid)) continue;
+      const iOwe = new Set<number>();
+      const owedToMe = new Set<number>();
+      for (const d of (debts ?? []) as { from_user: string; to_user: string; amount: number }[]) {
+        if (d.from_user === ownerId && d.to_user === memberId) iOwe.add(toPaise(d.amount));
+        if (d.from_user === memberId && d.to_user === ownerId) owedToMe.add(toPaise(d.amount));
+      }
+      if (twoPerson && myNet < 0) iOwe.add(-myNet);
+      if (twoPerson && myNet > 0) owedToMe.add(myNet);
+      if (iOwe.size || owedToMe.size) {
+        memberDebts.push({
+          member_user_id: memberId,
+          group_id: gid,
+          i_owe_amounts: [...iOwe],
+          owed_to_me_amounts: [...owedToMe],
+        });
+      }
+    }
+  }
+
+  // (e) rules
   const { data: rules } = await supabase
     .from('rules')
     .select('match_key, action, category, group_id')
     .eq('user_id', ownerId);
 
-  return { vpaMembers, rules: rules ?? [] };
+  return { vpaMembers, rules: rules ?? [], memberDebts };
 }
 
 // Apply a routing decision: ledger inserts, routed_status, review items, push.
@@ -119,6 +159,72 @@ async function applyAction(
       await review('pending_split', { expense_id: exp.id, group_id: action.group_id });
       await setStatus('group');
       await push(`₹${txn.amount} to ${who} — how to split?`);
+      return;
+    }
+    case 'settlement_out': {
+      // debit that exactly matches what I owe this member -> pending settlement
+      // (ADR 0001: payer-side records await the recipient). Dedupe against "I paid".
+      const { data: existing, error: selErr } = await supabase
+        .from('settlements')
+        .select('id')
+        .eq('group_id', action.group_id)
+        .eq('from_user', txn.user_id)
+        .eq('to_user', action.member_user_id)
+        .eq('status', 'pending')
+        .eq('amount', txn.amount.toFixed(2))
+        .limit(1);
+      if (selErr) { console.error(selErr); await review('unrouted_txn'); return; }
+      if (!existing?.length) {
+        const { error } = await supabase.from('settlements').insert({
+          group_id: action.group_id,
+          from_user: txn.user_id,
+          to_user: action.member_user_id,
+          amount: txn.amount,
+          status: 'pending',
+        });
+        if (error) { console.error(error); await review('unrouted_txn'); return; }
+        await sendPushToUser(supabase, action.member_user_id, {
+          title: 'SplitStream',
+          body: `You have a ₹${txn.amount} settlement to confirm`,
+          url: `/group/${action.group_id}`,
+        });
+      }
+      await setStatus('settlement');
+      return;
+    }
+    case 'settlement_in': {
+      // credit that exactly matches what a member owes me. Receiving is
+      // confirmation (ADR 0001): confirm the matching pending row, else insert confirmed.
+      const { data: pending, error: selErr } = await supabase
+        .from('settlements')
+        .select('id')
+        .eq('group_id', action.group_id)
+        .eq('from_user', action.member_user_id)
+        .eq('to_user', txn.user_id)
+        .eq('status', 'pending')
+        .eq('amount', txn.amount.toFixed(2))
+        .limit(1);
+      if (selErr) { console.error(selErr); await review('unrouted_txn'); return; }
+      if (pending?.length) {
+        const { error } = await supabase
+          .from('settlements').update({ status: 'confirmed' }).eq('id', pending[0].id);
+        if (error) { console.error(error); await review('unrouted_txn'); return; }
+      } else {
+        const { error } = await supabase.from('settlements').insert({
+          group_id: action.group_id,
+          from_user: action.member_user_id,
+          to_user: txn.user_id,
+          amount: txn.amount,
+          status: 'confirmed',
+        });
+        if (error) { console.error(error); await review('unrouted_txn'); return; }
+      }
+      await setStatus('settlement');
+      await sendPushToUser(supabase, action.member_user_id, {
+        title: 'SplitStream',
+        body: `Your ₹${txn.amount} settlement was confirmed`,
+        url: `/group/${action.group_id}`,
+      });
       return;
     }
     case 'ignore':

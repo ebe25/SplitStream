@@ -5,7 +5,7 @@ import { useUserId } from '../auth'
 import { supabase, type Balance, type Debt, type Group } from '../supabase'
 import { btn, btnGhost, card, errorCls, Header } from '../ui'
 
-type Member = { user_id: string; profiles: { display_name: string | null } | null }
+type Member = { user_id: string; profiles: { display_name: string | null; upi_vpa: string | null } | null }
 type Expense = {
   id: string; description: string | null; amount: number; paid_by: string; status: string
   occurred_at: string; expense_splits: { user_id: string; share_amount: number }[]
@@ -27,7 +27,7 @@ export function GroupDetail() {
   const load = useCallback(async () => {
     const [g, m, e, s, b, d] = await Promise.all([
       supabase.from('groups').select('*').eq('id', id).single(),
-      supabase.from('group_members').select('user_id, profiles(display_name)').eq('group_id', id),
+      supabase.from('group_members').select('user_id, profiles(display_name, upi_vpa)').eq('group_id', id),
       supabase.from('expenses').select('*, expense_splits(user_id, share_amount)')
         .eq('group_id', id).order('occurred_at', { ascending: false }),
       supabase.from('settlements').select('*').eq('group_id', id).order('created_at', { ascending: false }),
@@ -49,11 +49,37 @@ export function GroupDetail() {
   const name = (uid: string) =>
     uid === userId ? 'You' : members.find(m => m.user_id === uid)?.profiles?.display_name ?? '…'
 
-  const recordSettlement = async (debt: Debt) => {
+  // ADR-0001: payer-side records start pending; recipient-side records are confirmed.
+  const markPaid = async (debt: Debt) => {
+    const { data: existing, error: selErr } = await supabase.from('settlements').select('id')
+      .eq('group_id', id).eq('from_user', userId).eq('to_user', debt.to_user)
+      .eq('amount', debt.amount).eq('status', 'pending').limit(1)
+    if (selErr) return setError(selErr.message)
+    if (!existing?.length) {
+      const { error } = await supabase.from('settlements').insert({
+        group_id: id, from_user: userId, to_user: debt.to_user, amount: debt.amount, status: 'pending',
+      })
+      if (error) return setError(error.message)
+    }
+    load()
+  }
+
+  const recordReceived = async (debt: Debt) => {
     const { error } = await supabase.from('settlements').insert({
-      group_id: id, from_user: debt.from_user, to_user: debt.to_user,
-      amount: debt.amount, status: 'confirmed',
+      group_id: id, from_user: debt.from_user, to_user: userId, amount: debt.amount, status: 'confirmed',
     })
+    if (error) setError(error.message)
+    else load()
+  }
+
+  const confirmSettlement = async (sid: string) => {
+    const { error } = await supabase.from('settlements').update({ status: 'confirmed' }).eq('id', sid)
+    if (error) setError(error.message)
+    else load()
+  }
+
+  const setStatus = async (status: string) => {
+    const { error } = await supabase.from('groups').update({ status }).eq('id', id)
     if (error) setError(error.message)
     else load()
   }
@@ -71,14 +97,41 @@ export function GroupDetail() {
       </main>
     )
 
+  const closed = group.status === 'closed'
+  const allSettled = balances.every(b => b.net === 0)
+
   return (
     <main className="mx-auto max-w-xl px-4 pb-24 pt-4">
       <Header title={group.name} back="/" />
 
-      <div className="mb-4 flex gap-2">
-        <Link to={`/group/${id}/expense/new`} className={btn}>+ Add expense</Link>
-        <button className={btnGhost} onClick={copyInvite}>{copied ? 'Copied ✓' : 'Copy invite link'}</button>
-      </div>
+      <section className={`${card} mb-4 flex items-center justify-between gap-2`}>
+        <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+          {group.status}
+        </span>
+        {group.status === 'active' && (
+          <button className={btnGhost} onClick={() => setStatus('settling')}>Start settling</button>
+        )}
+        {group.status === 'settling' && (
+          <span className="flex gap-2">
+            <button className={btnGhost} onClick={() => setStatus('active')}>Reopen</button>
+            <button
+              className={btn}
+              disabled={!allSettled}
+              onClick={() => confirm('Close this group permanently?') && setStatus('closed')}
+            >
+              Close group
+            </button>
+          </span>
+        )}
+        {closed && <span className="text-sm text-zinc-500">This group is closed (read-only)</span>}
+      </section>
+
+      {!closed && (
+        <div className="mb-4 flex gap-2">
+          {group.status === 'active' && <Link to={`/group/${id}/expense/new`} className={btn}>+ Add expense</Link>}
+          <button className={btnGhost} onClick={copyInvite}>{copied ? 'Copied ✓' : 'Copy invite link'}</button>
+        </div>
+      )}
 
       <section className={card}>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">Balances</h2>
@@ -98,14 +151,32 @@ export function GroupDetail() {
         <section className={`${card} mt-4`}>
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">Settle up</h2>
           <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {debts.map((d, i) => (
-              <li key={i} className="flex items-center justify-between py-2 text-sm">
-                <span>{name(d.from_user)} → {name(d.to_user)}: <strong>₹{d.amount}</strong></span>
-                {(d.from_user === userId || d.to_user === userId) && (
-                  <button className={btnGhost} onClick={() => recordSettlement(d)}>Record paid</button>
-                )}
-              </li>
-            ))}
+            {debts.map((d, i) => {
+              const vpa = members.find(m => m.user_id === d.to_user)?.profiles?.upi_vpa
+              return (
+                <li key={i} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                  <span>{name(d.from_user)} → {name(d.to_user)}: <strong>₹{d.amount}</strong></span>
+                  {!closed && d.from_user === userId && (
+                    <span className="flex items-center gap-2">
+                      {vpa ? (
+                        <a
+                          className={btn}
+                          href={`upi://pay?pa=${vpa}&pn=${encodeURIComponent(name(d.to_user))}&am=${d.amount}&cu=INR&tn=${encodeURIComponent(group.name + ' settle')}`}
+                        >
+                          Pay via UPI
+                        </a>
+                      ) : (
+                        <span className="text-xs text-zinc-400">no UPI id</span>
+                      )}
+                      <button className={btnGhost} onClick={() => markPaid(d)}>I paid ✓</button>
+                    </span>
+                  )}
+                  {!closed && d.to_user === userId && (
+                    <button className={btnGhost} onClick={() => recordReceived(d)}>Record received</button>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </section>
       )}
@@ -149,9 +220,17 @@ export function GroupDetail() {
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">Settlements</h2>
           <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {settlements.map(s => (
-              <li key={s.id} className="py-2 text-sm">
-                {name(s.from_user)} paid {name(s.to_user)} <strong>₹{s.amount}</strong>{' '}
-                <span className="text-xs text-zinc-400">({s.status})</span>
+              <li key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                <span>
+                  {name(s.from_user)} paid {name(s.to_user)} <strong>₹{s.amount}</strong>{' '}
+                  <span className="text-xs text-zinc-400">({s.status})</span>
+                </span>
+                {s.status === 'pending' && s.to_user === userId && !closed && (
+                  <button className={btnGhost} onClick={() => confirmSettlement(s.id)}>Confirm</button>
+                )}
+                {s.status === 'pending' && s.from_user === userId && (
+                  <span className="text-xs text-zinc-400">awaiting confirmation</span>
+                )}
               </li>
             ))}
           </ul>

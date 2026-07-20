@@ -15,7 +15,15 @@ const ctx: RouteContext = {
     { match_key: 'goa villa rentals', action: 'group', category: null, group_id: 'g9' },
     { match_key: 'amit stores', action: 'ignore', category: null, group_id: null },
   ],
+  memberDebts: [],
 }
+
+const debt = (member_user_id: string, group_id: string, i_owe: number[], owed_to_me: number[] = []) => ({
+  member_user_id,
+  group_id,
+  i_owe_amounts: i_owe,
+  owed_to_me_amounts: owed_to_me,
+})
 
 describe('extractVpa', () => {
   it('finds a VPA embedded in a sentence', () => {
@@ -81,6 +89,58 @@ describe('route: debit rule paths', () => {
   it('no rule match -> review unrouted_txn', () => {
     expect(route(debit('RANDOM MERCHANT'), ctx)).toEqual({ kind: 'review', reviewKind: 'unrouted_txn' })
     expect(route(debit(null), ctx)).toEqual({ kind: 'review', reviewKind: 'unrouted_txn' })
+  })
+})
+
+describe('route: settlement matcher', () => {
+  it('debit exact match in one group -> settlement_out', () => {
+    const c: RouteContext = { ...ctx, memberDebts: [debt('u-rahul', 'g1', [10000])] }
+    expect(route(debit('rahul@okhdfc'), c)).toEqual({ kind: 'settlement_out', group_id: 'g1', member_user_id: 'u-rahul' })
+  })
+  it('debit exact match in two groups -> review choose_group with both ids', () => {
+    const c: RouteContext = { ...ctx, memberDebts: [debt('u-priya', 'g1', [10000]), debt('u-priya', 'g2', [10000])] }
+    expect(route(debit('priya@oksbi'), c)).toEqual({
+      kind: 'review',
+      reviewKind: 'choose_group',
+      member_user_id: 'u-priya',
+      group_ids: ['g1', 'g2'],
+    })
+  })
+  it('debit 1 paisa off -> falls to group_pending_split (0% tolerance)', () => {
+    const c: RouteContext = { ...ctx, memberDebts: [debt('u-rahul', 'g1', [10001])] }
+    expect(route(debit('rahul@okhdfc'), c)).toEqual({ kind: 'group_pending_split', group_id: 'g1' })
+  })
+  it('credit exact match in one group -> settlement_in', () => {
+    const c: RouteContext = { ...ctx, memberDebts: [debt('u-rahul', 'g1', [], [10000])] }
+    expect(route(credit('rahul@okhdfc'), c)).toEqual({ kind: 'settlement_in', group_id: 'g1', member_user_id: 'u-rahul' })
+  })
+  it('credit exact match in two groups -> review member_credit with matching ids', () => {
+    const c: RouteContext = { ...ctx, memberDebts: [debt('u-priya', 'g1', [], [10000]), debt('u-priya', 'g2', [], [10000])] }
+    expect(route(credit('priya@oksbi'), c)).toEqual({
+      kind: 'review',
+      reviewKind: 'member_credit',
+      member_user_id: 'u-priya',
+      group_ids: ['g1', 'g2'],
+    })
+  })
+  it('credit 1 paisa off -> plain member_credit review (0% tolerance)', () => {
+    const c: RouteContext = { ...ctx, memberDebts: [debt('u-rahul', 'g1', [], [10001])] }
+    expect(route(credit('rahul@okhdfc'), c)).toEqual({
+      kind: 'review',
+      reviewKind: 'member_credit',
+      member_user_id: 'u-rahul',
+      group_ids: ['g1'],
+    })
+  })
+  it('memberDebts for a different member leave routing unaffected', () => {
+    const c: RouteContext = { ...ctx, memberDebts: [debt('u-priya', 'g1', [10000], [10000])] }
+    expect(route(debit('rahul@okhdfc'), c)).toEqual({ kind: 'group_pending_split', group_id: 'g1' })
+    expect(route(credit('rahul@okhdfc'), c)).toEqual({
+      kind: 'review',
+      reviewKind: 'member_credit',
+      member_user_id: 'u-rahul',
+      group_ids: ['g1'],
+    })
   })
 })
 

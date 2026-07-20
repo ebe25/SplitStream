@@ -9,6 +9,7 @@ import { Inbox } from './pages/Inbox'
 import { Join } from './pages/Join'
 import { Personal } from './pages/Personal'
 import { Settings } from './pages/Settings'
+import { SplitPending } from './pages/SplitPending'
 import './styles.css'
 
 const tab = ({ isActive }: { isActive: boolean }) =>
@@ -40,6 +41,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<Groups />} />
             <Route path="/group/:id" element={<GroupDetail />} />
             <Route path="/group/:id/expense/new" element={<ExpenseForm />} />
+            <Route path="/group/:id/split/:eid" element={<SplitPending />} />
             <Route path="/join/:code" element={<Join />} />
             <Route path="/personal" element={<Personal />} />
             <Route path="/inbox" element={<Inbox />} />

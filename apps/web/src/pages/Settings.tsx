@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useUserId } from '../auth'
-import { supabase } from '../supabase'
+import { enablePush, pushEnabled } from '../push'
+import { supabase, type Group, type Rule } from '../supabase'
 import { btn, btnGhost, card, errorCls, Header, input, labelCls } from '../ui'
 
 export function Settings() {
@@ -44,6 +45,10 @@ export function Settings() {
         {error && <p className={errorCls} role="alert">{error}</p>}
       </form>
 
+      <Notifications />
+
+      <Rules />
+
       <Devices />
 
       <div className={`${card} mt-4`}>
@@ -52,6 +57,81 @@ export function Settings() {
         </button>
       </div>
     </main>
+  )
+}
+
+function Notifications() {
+  const userId = useUserId()
+  const [state, setState] = useState<'enabled' | 'denied' | 'unsupported' | 'off' | null>(null)
+
+  useEffect(() => { pushEnabled().then(on => setState(on ? 'enabled' : 'off')) }, [])
+
+  return (
+    <div className={`${card} mt-4 space-y-3`}>
+      <p className={labelCls}>Notifications</p>
+      {state === 'enabled' ? (
+        <p className="text-sm text-zinc-500">Enabled ✓</p>
+      ) : (
+        <>
+          <button className={btn} disabled={state === null} onClick={async () => setState(await enablePush(userId))}>
+            Enable notifications
+          </button>
+          {state === 'denied' && (
+            <p className="text-sm text-zinc-500">Blocked — allow notifications for this site in your browser settings.</p>
+          )}
+          {state === 'unsupported' && (
+            <p className="text-sm text-zinc-500">Not supported in this browser.</p>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function Rules() {
+  const [rules, setRules] = useState<Rule[]>([])
+  const [groups, setGroups] = useState<Group[]>([])
+  const [error, setError] = useState('')
+
+  const load = () =>
+    supabase.from('rules').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => setRules(data ?? []))
+
+  useEffect(() => {
+    load()
+    supabase.from('groups').select('*').then(({ data }) => setGroups(data ?? []))
+  }, [])
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from('rules').delete().eq('id', id)
+    if (error) return setError(error.message)
+    load()
+  }
+
+  const detail = (r: Rule) =>
+    r.action === 'personal' ? `personal${r.category ? ` · ${r.category}` : ''}`
+    : r.action === 'group' ? `group · ${groups.find(g => g.id === r.group_id)?.name ?? '…'}`
+    : 'ignore'
+
+  return (
+    <div className={`${card} mt-4 space-y-3`}>
+      <p className={labelCls}>Rules</p>
+      <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+        {rules.map(r => (
+          <li key={r.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+            <span>
+              {r.match_key}
+              <div className="text-xs text-zinc-400">{detail(r)}</div>
+            </span>
+            <button className={`${btnGhost} text-red-600 dark:text-red-400`} onClick={() => remove(r.id)}>Delete</button>
+          </li>
+        ))}
+        {rules.length === 0 && (
+          <li className="py-2 text-sm text-zinc-500">Rules are learned when you tick 'always do this' in the inbox.</li>
+        )}
+      </ul>
+      {error && <p className={errorCls} role="alert">{error}</p>}
+    </div>
   )
 }
 

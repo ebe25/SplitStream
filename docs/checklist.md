@@ -46,13 +46,15 @@ _Last updated: 2026-07-19_
 - [ ] MacroDroid recipe on phone (steps in README) + mint a device token in Settings
 - [ ] Acceptance: coffee → inbox in seconds; dupes no-op; garbled SMS = parse failure, not silence
 
-## Phase 2 — Routing engine + push
-- [ ] `0003_routing.sql`: `rules`, `payee_identities`, `push_subscriptions`
-- [ ] `route(txn, context)` pure function, every branch unit-tested
-- [ ] `parse-run` wiring (route + apply in transaction)
-- [ ] Web Push: VAPID keys, `notify` function, actionable notifications
-- [ ] Learning loop: `resolve-review` + "always do this" → rules; rules CRUD in Settings
-- [ ] Split prompt: `pending_split` + one-tap Equal
+## Phase 2 — Routing engine + push — CODE DONE, not deployed (per dev-testing hold)
+- [x] Decision tree locked via grilling: VPA-first member match + learned payee_identities; auto if 1 shared group, review if 2+; member credits → review, other credits → ignore; pending_split visible w/ badge; push actions deep-link
+- [x] `0004_routing.sql`: `rules`, `payee_identities`, `push_subscriptions`, `review_items.payload` + widened kinds, `confirm_expense_split()` RPC — docker-validated + pgTAP (`0004_routing_test.sql`)
+- [x] `route(txn, ctx)` pure function in `packages/shared` — every branch tested (19 tests; 40 total green)
+- [x] Routing wired inline into `ingest-sms` (buildContext + applyAction; no separate parse-run — YAGNI)
+- [x] Web Push: VAPID keys generated (public in `.env`, private in gitignored `supabase/functions/.env`), `_shared/push.ts` sender (auto-prunes dead subscriptions), custom SW (injectManifest) with push + notificationclick deep-link
+- [x] Learning loop: "Always do this" checkbox → `rules` upsert; Rules CRUD + Notifications enable in Settings
+- [x] Split prompt: `pending_split` inbox item (one-tap Equal via RPC, Custom → `/group/:id/split/:eid` editor), amber badge in group ledger
+- [x] Deployed 2026-07-20: 0004 pushed (local=remote 0001–0004), `ingest-sms` redeployed with routing, VAPID secrets set (3), 401 auth-reject verified live
 - [ ] Acceptance: known merchant silent; housemate VPA → group asking split; unknown = exactly one notification; "always" learns
 
 ## Phase 3 — Smart settlements

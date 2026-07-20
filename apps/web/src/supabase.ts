@@ -9,3 +9,7 @@ export type Profile = { id: string; display_name: string | null; upi_vpa: string
 export type Group = { id: string; name: string; status: string; invite_code: string }
 export type Balance = { user_id: string; paid: number; share: number; net: number }
 export type Debt = { from_user: string; to_user: string; amount: number }
+export type Rule = {
+  id: string; match_key: string; action: 'personal' | 'group' | 'ignore'
+  category: string | null; group_id: string | null
+}

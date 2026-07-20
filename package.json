@@ -5,7 +5,7 @@
     "test": "pnpm -r test",
     "test:db": "supabase test db",
     "build": "pnpm --filter web build",
-    "sync:functions": "cp packages/shared/src/parser.ts supabase/functions/_shared/parser.ts"
+    "sync:functions": "cp packages/shared/src/parser.ts packages/shared/src/route.ts supabase/functions/_shared/"
   },
   "packageManager": "pnpm@9.11.0",
   "engines": {

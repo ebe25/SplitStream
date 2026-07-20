@@ -9,6 +9,10 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      devOptions: { enabled: false },
       manifest: {
         name: 'SplitStream',
         short_name: 'SplitStream',
@@ -24,4 +28,7 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    allowedHosts: ["ebmga-122-161-49-130.free.pinggy.net"]
+  }
 })

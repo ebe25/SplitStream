@@ -1,4 +1,5 @@
 export * from './parser'
+export * from './route'
 
 export type SplitMode = 'equal' | 'exact' | 'percent' | 'shares'
 

@@ -7,7 +7,7 @@ import { btn, btnGhost, card, errorCls, Header } from '../ui'
 
 type Member = { user_id: string; profiles: { display_name: string | null } | null }
 type Expense = {
-  id: string; description: string | null; amount: number; paid_by: string
+  id: string; description: string | null; amount: number; paid_by: string; status: string
   occurred_at: string; expense_splits: { user_id: string; share_amount: number }[]
 }
 type Settlement = { id: string; from_user: string; to_user: string; amount: number; status: string }
@@ -118,8 +118,18 @@ export function GroupDetail() {
           <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {expenses.map(e => (
               <li key={e.id} className="py-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="font-medium">{e.description ?? 'Expense'}</span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="grow font-medium">{e.description ?? 'Expense'}</span>
+                  {e.status === 'pending_split' && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                      pending split
+                    </span>
+                  )}
+                  {e.status === 'pending_split' && e.paid_by === userId && (
+                    <Link to={`/group/${id}/split/${e.id}`} className="text-xs text-indigo-600 hover:underline dark:text-indigo-400">
+                      Split
+                    </Link>
+                  )}
                   <span className="font-semibold">₹{e.amount}</span>
                 </div>
                 <div className="text-xs text-zinc-500">

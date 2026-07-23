@@ -1,6 +1,7 @@
 import { computeSplits, normalizeCounterparty, toPaise, toRupees } from '@splitstream/shared'
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Loading } from '../anim'
 import { useUserId } from '../auth'
 import { supabase, type Group } from '../supabase'
 import { btn, btnGhost, card, errorCls, formatINR, Header, input } from '../ui'
@@ -54,7 +55,7 @@ export function Inbox() {
     supabase.from('groups').select('*').then(({ data }) => setGroups(data ?? []))
   }, [])
 
-  if (items === null) return <p className="p-8 text-center text-muted">Loading…</p>
+  if (items === null) return <Loading />
 
   return (
     <main className="mx-auto max-w-xl px-4 pb-24 pt-4">

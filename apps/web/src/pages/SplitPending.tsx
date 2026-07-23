@@ -1,6 +1,7 @@
 import { computeSplits, toPaise, toRupees, type SplitMode } from '@splitstream/shared'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Loading } from '../anim'
 import { useUserId } from '../auth'
 import { supabase } from '../supabase'
 import { btn, card, errorCls, Header, input, labelCls } from '../ui'
@@ -68,7 +69,7 @@ export function SplitPending() {
     else navigate(`/group/${id}`)
   }
 
-  if (!expense) return <p className="p-8 text-center text-muted">Loading…</p>
+  if (!expense) return <Loading />
 
   return (
     <main className="mx-auto max-w-md px-4 pb-24 pt-4">

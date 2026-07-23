@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { faGithub, faGoogle } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Loading } from './anim'
 import { supabase } from './supabase'
 import { btn, btnGhost, card, errorCls, input, labelCls } from './ui'
 
@@ -30,7 +31,7 @@ export const useUserId = () => useContext(AuthCtx).session?.user.id ?? ''
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, loading } = useSession()
   const location = useLocation()
-  if (loading) return <p className="p-8 text-center text-muted">Loading…</p>
+  if (loading) return <Loading />
   if (!session) return <Navigate to="/auth" state={{ from: location.pathname }} replace />
   return <>{children}</>
 }

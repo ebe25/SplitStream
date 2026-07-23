@@ -1,6 +1,8 @@
 import { toRupees } from '@splitstream/shared'
-import { useCallback, useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Confetti, Loading } from '../anim'
 import { useUserId } from '../auth'
 import { supabase, type Balance, type Debt, type Group } from '../supabase'
 import { btn, btnGhost, card, errorCls, Header, Money, sectionCls } from '../ui'
@@ -23,6 +25,8 @@ export function GroupDetail() {
   const [debts, setDebts] = useState<Debt[]>([])
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [burst, setBurst] = useState(0)
+  const wasSettled = useRef<boolean | null>(null)
 
   const load = useCallback(async () => {
     const [g, m, e, s, b, d] = await Promise.all([
@@ -69,13 +73,13 @@ export function GroupDetail() {
       group_id: id, from_user: debt.from_user, to_user: userId, amount: debt.amount, status: 'confirmed',
     })
     if (error) setError(error.message)
-    else load()
+    else { setBurst(b => b + 1); load() }
   }
 
   const confirmSettlement = async (sid: string) => {
     const { error } = await supabase.from('settlements').update({ status: 'confirmed' }).eq('id', sid)
     if (error) setError(error.message)
-    else load()
+    else { setBurst(b => b + 1); load() }
   }
 
   const setStatus = async (status: string) => {
@@ -90,18 +94,26 @@ export function GroupDetail() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const closed = group?.status === 'closed'
+  const allSettled = balances.length > 0 && balances.every(b => b.net === 0)
+
+  // celebrate only the transition into fully-settled, not landing on an already-settled group
+  useEffect(() => {
+    if (!balances.length) return
+    if (wasSettled.current === false && allSettled) setBurst(b => b + 1)
+    wasSettled.current = allSettled
+  }, [allSettled, balances.length])
+
   if (!group)
     return (
       <main className="p-8 text-center text-muted">
-        {error ? <p className={errorCls} role="alert">{error}</p> : 'Loading…'}
+        {error ? <p className={errorCls} role="alert">{error}</p> : <Loading />}
       </main>
     )
 
-  const closed = group.status === 'closed'
-  const allSettled = balances.every(b => b.net === 0)
-
   return (
     <main className="mx-auto max-w-xl px-4 pb-24 pt-4">
+      <Confetti burst={burst} />
       <Header title={group.name} back="/" />
 
       <section className={`${card} mb-4 flex items-center justify-between gap-2`}>
@@ -149,38 +161,62 @@ export function GroupDetail() {
             </li>
           ))}
         </ul>
+        <AnimatePresence>
+          {allSettled && (
+            <motion.p
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+              className="mt-3 rounded-xl bg-pine-soft py-3 text-center font-medium text-accent"
+            >
+              All settled up 🎉
+            </motion.p>
+          )}
+        </AnimatePresence>
       </section>
 
       {debts.length > 0 && (
         <section className={`${card} mt-4`}>
           <h2 className={sectionCls}>Settle up</h2>
           <ul className="divide-y divide-line/60">
-            {debts.map((d, i) => {
+            <AnimatePresence initial={false}>
+            {debts.map(d => {
               const vpa = members.find(m => m.user_id === d.to_user)?.profiles?.upi_vpa
               return (
-                <li key={i} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                <motion.li
+                  key={`${d.from_user}-${d.to_user}`}
+                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"
+                >
                   <span>{name(d.from_user)} → {name(d.to_user)}: <Money amount={d.amount} className="text-base" /></span>
                   {!closed && d.from_user === userId && (
                     <span className="flex items-center gap-2">
                       {vpa ? (
-                        <a
+                        <motion.a
+                          whileTap={{ scale: 0.94 }}
                           className={btn}
                           href={`upi://pay?pa=${vpa}&pn=${encodeURIComponent(name(d.to_user))}&am=${d.amount}&cu=INR&tn=${encodeURIComponent(group.name + ' settle')}`}
                         >
                           Pay via UPI
-                        </a>
+                        </motion.a>
                       ) : (
                         <span className="text-xs text-faint">no UPI id</span>
                       )}
-                      <button className={btnGhost} onClick={() => markPaid(d)}>I paid ✓</button>
+                      <motion.button whileTap={{ scale: 0.94 }} className={btnGhost} onClick={() => markPaid(d)}>I paid ✓</motion.button>
                     </span>
                   )}
                   {!closed && d.to_user === userId && (
-                    <button className={btnGhost} onClick={() => recordReceived(d)}>Record received</button>
+                    <motion.button whileTap={{ scale: 0.94 }} className={btnGhost} onClick={() => recordReceived(d)}>Record received</motion.button>
                   )}
-                </li>
+                </motion.li>
               )
             })}
+            </AnimatePresence>
           </ul>
         </section>
       )}
@@ -223,20 +259,29 @@ export function GroupDetail() {
         <section className={`${card} mt-4`}>
           <h2 className={sectionCls}>Settlements</h2>
           <ul className="divide-y divide-line/60">
+            <AnimatePresence initial={false}>
             {settlements.map(s => (
-              <li key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+              <motion.li
+                key={s.id}
+                layout
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                className="flex items-center justify-between gap-2 py-2 text-sm"
+              >
                 <span>
                   {name(s.from_user)} paid {name(s.to_user)} <Money amount={s.amount} />{' '}
                   <span className="text-xs text-faint">({s.status})</span>
                 </span>
                 {s.status === 'pending' && s.to_user === userId && !closed && (
-                  <button className={btnGhost} onClick={() => confirmSettlement(s.id)}>Confirm</button>
+                  <motion.button whileTap={{ scale: 0.94 }} className={btnGhost} onClick={() => confirmSettlement(s.id)}>Confirm</motion.button>
                 )}
                 {s.status === 'pending' && s.from_user === userId && (
                   <span className="text-xs text-faint">awaiting confirmation</span>
                 )}
-              </li>
+              </motion.li>
             ))}
+            </AnimatePresence>
           </ul>
         </section>
       )}

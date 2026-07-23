@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Loading } from '../anim'
 import { useSession, useUserId } from '../auth'
 import { supabase, type Group } from '../supabase'
 import { btn, card, errorCls, Header, input, labelCls } from '../ui'
@@ -24,7 +25,7 @@ export function Groups() {
     load()
   }
 
-  if (groups === null) return <p className="p-8 text-center text-muted">Loading…</p>
+  if (groups === null) return <Loading />
 
   return (
     <main className="mx-auto max-w-xl px-4 pb-24 pt-4">

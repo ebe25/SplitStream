@@ -1,6 +1,8 @@
+import { MotionConfig } from 'motion/react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, NavLink, Outlet, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, NavLink, Outlet, Route, Routes, useLocation } from 'react-router-dom'
+import { PageFade } from './anim'
 import { AuthPage, AuthProvider, RequireAuth } from './auth'
 import { InstallBanner } from './install'
 import { ExpenseForm } from './pages/ExpenseForm'
@@ -20,9 +22,12 @@ const tab = ({ isActive }: { isActive: boolean }) =>
   }`
 
 function Shell() {
+  const { pathname } = useLocation()
   return (
     <>
-      <Outlet />
+      <PageFade key={pathname}>
+        <Outlet />
+      </PageFade>
       <InstallBanner />
       <nav className="fixed inset-x-0 bottom-0 flex border-t border-line bg-surface/90 backdrop-blur pb-[env(safe-area-inset-bottom)]">
         <NavLink to="/" end className={tab}>Groups</NavLink>
@@ -38,8 +43,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
       <BrowserRouter>
+        <MotionConfig reducedMotion="user">
         <Routes>
-          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/auth" element={<PageFade><AuthPage /></PageFade>} />
           <Route element={<RequireAuth><Shell /></RequireAuth>}>
             <Route path="/" element={<Groups />} />
             <Route path="/group/:id" element={<GroupDetail />} />
@@ -51,6 +57,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Routes>
+        </MotionConfig>
       </BrowserRouter>
     </AuthProvider>
   </StrictMode>,

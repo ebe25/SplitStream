@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { faGithub, faGoogle } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Loading } from './anim'
+import { Loading, Mascot } from './anim'
 import { supabase } from './supabase'
 import { btn, btnGhost, card, errorCls, input, labelCls } from './ui'
 
@@ -77,9 +77,7 @@ export function AuthPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-8">
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-pine font-display text-3xl font-bold text-white shadow-card">
-          ₹
-        </div>
+        <Mascot />
         <h1 className="text-3xl font-bold tracking-tight">SplitStream</h1>
         <p className="mt-1.5 text-sm text-muted">Shared expenses, automatically captured.</p>
       </div>

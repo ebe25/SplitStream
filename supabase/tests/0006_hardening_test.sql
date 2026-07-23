@@ -41,8 +41,9 @@ select is((select body from raw_sms where id = '66666666-6666-6666-6666-66666666
 set local role authenticated;
 set local request.jwt.claims to '{"sub": "00000000-0000-0000-0000-00000000000a", "role": "authenticated"}';
 
-select is((select count(*)::int from cron_config), 0,
-  'cron_config is invisible to authenticated');
+select throws_ok(
+  'select * from cron_config', '42501', null,
+  'cron_config is revoked from authenticated (0007)');
 
 select * from finish();
 rollback;

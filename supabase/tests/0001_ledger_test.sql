@@ -50,7 +50,11 @@ insert into expense_splits (expense_id, user_id, share_amount) values
 
 select lives_ok('set constraints all immediate', 'splits summing to amount pass the constraint');
 
--- mismatched splits rejected
+-- mismatched splits rejected. Roll back to a savepoint instead of deleting:
+-- deleting a row with a pending deferred constraint-trigger event fires the
+-- event immediately, which would raise the very violation we just asserted.
+set constraints all deferred;  -- lives_ok above left immediate mode on
+savepoint bad_splits;
 insert into expenses (id, group_id, paid_by, created_by, amount) values
   ('33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111',
    '00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 100);
@@ -58,8 +62,7 @@ insert into expense_splits (expense_id, user_id, share_amount) values
   ('33333333-3333-3333-3333-333333333333', '00000000-0000-0000-0000-00000000000a', 30);
 select throws_ok('set constraints all immediate', null, null,
   'splits not summing to amount are rejected');
-delete from expense_splits where expense_id = '33333333-3333-3333-3333-333333333333';
-delete from expenses where id = '33333333-3333-3333-3333-333333333333';
+rollback to savepoint bad_splits;
 
 -- ---------- membership-join: Carol (non-member) sees nothing ----------
 set local request.jwt.claims to '{"sub": "00000000-0000-0000-0000-00000000000c", "role": "authenticated"}';

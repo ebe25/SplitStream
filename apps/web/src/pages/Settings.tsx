@@ -210,11 +210,11 @@ function Devices() {
             <button className={`${btnGhost} text-neg`} onClick={() => revoke(d.id)}>Revoke</button>
           </li>
         ))}
-        {devices.length === 0 && <li className="py-2 text-sm text-muted">No devices yet — add one to forward bank SMS from MacroDroid.</li>}
+        {devices.length === 0 && <li className="py-2 text-sm text-muted">No devices yet — add one, then scan its QR with the SplitStream forwarder to auto-capture bank SMS.</li>}
       </ul>
       {newToken && (
         <div className="rounded-xl border border-warn-ink/25 bg-warn-bg p-3">
-          <p className="text-sm font-medium text-warn-ink">Token shown once — store it in MacroDroid now.</p>
+          <p className="text-sm font-medium text-warn-ink">Token shown once — scan the QR with the forwarder app now.</p>
           {qr && (
             <div className="mt-2 flex justify-center">
               {/* white box so QR scans in dark mode */}
@@ -230,7 +230,7 @@ function Devices() {
         </div>
       )}
       <form onSubmit={add} className="flex gap-2">
-        <input required placeholder="MacroDroid – Pixel" aria-label="Device label" className={input} value={label} onChange={e => setLabel(e.target.value)} />
+        <input required placeholder="e.g. Vedansh’s Pixel" aria-label="Device label" className={input} value={label} onChange={e => setLabel(e.target.value)} />
         <button className={btn}>Add device</button>
       </form>
       {error && <p className={errorCls} role="alert">{error}</p>}

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useUserId } from '../auth'
 import { supabase, type Group } from '../supabase'
-import { btn, btnGhost, card, errorCls, Header, input } from '../ui'
+import { btn, btnGhost, card, errorCls, formatINR, Header, input } from '../ui'
 
 type Txn = {
   id: string; direction: string; amount: number; counterparty_raw: string | null
@@ -54,12 +54,12 @@ export function Inbox() {
     supabase.from('groups').select('*').then(({ data }) => setGroups(data ?? []))
   }, [])
 
-  if (items === null) return <p className="p-8 text-center text-zinc-500">Loading…</p>
+  if (items === null) return <p className="p-8 text-center text-muted">Loading…</p>
 
   return (
     <main className="mx-auto max-w-xl px-4 pb-24 pt-4">
       <Header title="Inbox" />
-      <ul className={`${card} divide-y divide-zinc-100 dark:divide-zinc-800`}>
+      <ul className={`${card} divide-y divide-line/60`}>
         {items.map(i => {
           if (i.kind === 'parse_failed') return <SmsItem key={i.id} item={i} onDone={load} />
           if (i.kind === 'choose_group') return <ChooseGroupItem key={i.id} item={i} groups={groups} />
@@ -68,7 +68,7 @@ export function Inbox() {
           return <TxnItem key={i.id} item={i} groups={groups} onDone={load} />
         })}
         {items.length === 0 && (
-          <li className="py-2 text-sm text-zinc-500">Inbox zero ✓ — transactions from your bank SMS will appear here.</li>
+          <li className="py-2 text-sm text-muted">Inbox zero ✓ — transactions from your bank SMS will appear here.</li>
         )}
       </ul>
     </main>
@@ -123,11 +123,13 @@ function TxnItem({ item, groups, onDone }: { item: ReviewItem; groups: Group[]; 
 
   return (
     <li className="py-3">
-      <div className="flex justify-between text-sm">
+      <div className="flex items-baseline justify-between text-sm">
         <span>{t.counterparty_raw ?? 'Unknown'}</span>
-        <strong className="tabular-nums">{t.direction === 'debit' ? '−' : '+'}₹{t.amount}</strong>
+        <strong className={`text-base tabular-nums ${t.direction === 'debit' ? 'text-neg' : 'text-pos'}`}>
+          {t.direction === 'debit' ? '−' : '+'}₹{formatINR(t.amount)}
+        </strong>
       </div>
-      <p className="text-xs text-zinc-400">{new Date(t.occurred_at).toLocaleString()}</p>
+      <p className="text-xs text-faint">{new Date(t.occurred_at).toLocaleString()}</p>
       {category === null ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <button className={btnGhost} onClick={() => setCategory('')}>Personal</button>
@@ -139,8 +141,8 @@ function TxnItem({ item, groups, onDone }: { item: ReviewItem; groups: Group[]; 
             {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
           <button className={btnGhost} onClick={ignore}>Ignore</button>
-          <label className="flex items-center gap-1.5 text-sm text-zinc-500">
-            <input type="checkbox" className="size-4 accent-indigo-600" checked={always} onChange={e => setAlways(e.target.checked)} />
+          <label className="flex items-center gap-1.5 text-sm text-muted">
+            <input type="checkbox" className="size-4 accent-pine" checked={always} onChange={e => setAlways(e.target.checked)} />
             Always do this
           </label>
         </div>
@@ -171,11 +173,13 @@ function ChooseGroupItem({ item, groups }: { item: ReviewItem; groups: Group[] }
 
   return (
     <li className="py-3">
-      <div className="flex justify-between text-sm">
+      <div className="flex items-baseline justify-between text-sm">
         <span>{t.counterparty_raw ?? 'Unknown'} — which group?</span>
-        <strong className="tabular-nums">{t.direction === 'debit' ? '−' : '+'}₹{t.amount}</strong>
+        <strong className={`text-base tabular-nums ${t.direction === 'debit' ? 'text-neg' : 'text-pos'}`}>
+          {t.direction === 'debit' ? '−' : '+'}₹{formatINR(t.amount)}
+        </strong>
       </div>
-      <p className="text-xs text-zinc-400">{new Date(t.occurred_at).toLocaleString()}</p>
+      <p className="text-xs text-faint">{new Date(t.occurred_at).toLocaleString()}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {choices.map(g => <button key={g.id} className={btnGhost} onClick={() => choose(g.id)}>{g.name}</button>)}
       </div>
@@ -217,8 +221,8 @@ function MemberCreditItem({ item, groups, onDone }: { item: ReviewItem; groups: 
 
   return (
     <li className="py-3">
-      <p className="text-sm">₹{t.amount} received from <strong>{name}</strong> — probably a repayment</p>
-      <p className="text-xs text-zinc-400">{new Date(t.occurred_at).toLocaleString()}</p>
+      <p className="text-sm"><strong className="tabular-nums text-pos">₹{formatINR(t.amount)}</strong> received from <strong>{name}</strong> — probably a repayment</p>
+      <p className="text-xs text-faint">{new Date(t.occurred_at).toLocaleString()}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {choices.length === 1
           ? <button className={btn} onClick={() => record(choices[0].id)}>Record settlement</button>
@@ -267,8 +271,8 @@ function PendingSplitItem({ item, groups, onDone }: { item: ReviewItem; groups: 
 
   return (
     <li className="py-3">
-      <p className="text-sm">₹{t.amount} in <strong>{group?.name ?? '…'}</strong> — how to split?</p>
-      <p className="text-xs text-zinc-400">{new Date(t.occurred_at).toLocaleString()}</p>
+      <p className="text-sm"><strong className="tabular-nums">₹{formatINR(t.amount)}</strong> in <strong>{group?.name ?? '…'}</strong> — how to split?</p>
+      <p className="text-xs text-faint">{new Date(t.occurred_at).toLocaleString()}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         <button className={btn} disabled={busy} onClick={splitEqually}>{busy ? 'Splitting…' : 'Split equally'}</button>
         <button className={btnGhost} onClick={custom}>Custom…</button>
@@ -289,7 +293,7 @@ function SmsItem({ item, onDone }: { item: ReviewItem; onDone: () => void }) {
 
   return (
     <li className="py-3">
-      <p className="text-xs text-zinc-400">Couldn’t parse — {item.raw_sms?.sender}</p>
+      <p className="text-xs text-faint">Couldn’t parse — {item.raw_sms?.sender}</p>
       <pre className="whitespace-pre-wrap mt-1 text-sm">{item.raw_sms?.body}</pre>
       <button className={`${btnGhost} mt-2`} onClick={dismiss}>Dismiss</button>
       {error && <p className={`${errorCls} mt-2`} role="alert">{error}</p>}

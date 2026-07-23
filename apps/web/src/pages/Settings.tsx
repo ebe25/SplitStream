@@ -1,8 +1,13 @@
+import QRCode from 'qrcode'
 import { useEffect, useState } from 'react'
 import { useUserId } from '../auth'
+import { useInstall } from '../install'
 import { enablePush, pushEnabled } from '../push'
 import { supabase, type Group, type Rule } from '../supabase'
 import { btn, btnGhost, card, errorCls, Header, input, labelCls } from '../ui'
+
+// CI/release must publish the APK under this exact asset name.
+const FORWARDER_APK_URL = 'https://github.com/ebe25/SplitStream/releases/latest/download/splitstream-forwarder.apk'
 
 export function Settings() {
   const userId = useUserId()
@@ -38,7 +43,7 @@ export function Settings() {
           <input id="name" className={`${input} mt-1`} value={displayName} onChange={e => setDisplayName(e.target.value)} />
         </div>
         <div>
-          <label htmlFor="vpa" className={labelCls}>UPI VPA <span className="font-normal text-zinc-400">(for settle-up links, Phase 3)</span></label>
+          <label htmlFor="vpa" className={labelCls}>UPI VPA <span className="font-normal text-faint">(for settle-up links, Phase 3)</span></label>
           <input id="vpa" className={`${input} mt-1`} placeholder="you@upi" value={upiVpa} onChange={e => setUpiVpa(e.target.value)} />
         </div>
         <button className={btn}>{saved ? 'Saved ✓' : 'Save'}</button>
@@ -51,8 +56,12 @@ export function Settings() {
 
       <Devices />
 
+      <InstallApp />
+
+      <GetForwarder />
+
       <div className={`${card} mt-4`}>
-        <button className={`${btnGhost} w-full text-red-600 dark:text-red-400`} onClick={() => supabase.auth.signOut()}>
+        <button className={`${btnGhost} w-full text-neg`} onClick={() => supabase.auth.signOut()}>
           Sign out
         </button>
       </div>
@@ -70,17 +79,17 @@ function Notifications() {
     <div className={`${card} mt-4 space-y-3`}>
       <p className={labelCls}>Notifications</p>
       {state === 'enabled' ? (
-        <p className="text-sm text-zinc-500">Enabled ✓</p>
+        <p className="text-sm text-muted">Enabled ✓</p>
       ) : (
         <>
           <button className={btn} disabled={state === null} onClick={async () => setState(await enablePush(userId))}>
             Enable notifications
           </button>
           {state === 'denied' && (
-            <p className="text-sm text-zinc-500">Blocked — allow notifications for this site in your browser settings.</p>
+            <p className="text-sm text-muted">Blocked — allow notifications for this site in your browser settings.</p>
           )}
           {state === 'unsupported' && (
-            <p className="text-sm text-zinc-500">Not supported in this browser.</p>
+            <p className="text-sm text-muted">Not supported in this browser.</p>
           )}
         </>
       )}
@@ -116,18 +125,18 @@ function Rules() {
   return (
     <div className={`${card} mt-4 space-y-3`}>
       <p className={labelCls}>Rules</p>
-      <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+      <ul className="divide-y divide-line/60">
         {rules.map(r => (
           <li key={r.id} className="flex items-center justify-between gap-2 py-2 text-sm">
             <span>
               {r.match_key}
-              <div className="text-xs text-zinc-400">{detail(r)}</div>
+              <div className="text-xs text-faint">{detail(r)}</div>
             </span>
-            <button className={`${btnGhost} text-red-600 dark:text-red-400`} onClick={() => remove(r.id)}>Delete</button>
+            <button className={`${btnGhost} text-neg`} onClick={() => remove(r.id)}>Delete</button>
           </li>
         ))}
         {rules.length === 0 && (
-          <li className="py-2 text-sm text-zinc-500">Rules are learned when you tick 'always do this' in the inbox.</li>
+          <li className="py-2 text-sm text-muted">Rules are learned when you tick 'always do this' in the inbox.</li>
         )}
       </ul>
       {error && <p className={errorCls} role="alert">{error}</p>}
@@ -143,7 +152,13 @@ function Devices() {
   const [label, setLabel] = useState('')
   const [newToken, setNewToken] = useState('')
   const [copied, setCopied] = useState(false)
+  const [qr, setQr] = useState('')
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!newToken) return setQr('')
+    QRCode.toDataURL(newToken).then(setQr)
+  }, [newToken])
 
   const load = () =>
     supabase.from('devices').select('id, label, created_at, last_seen_at').order('created_at', { ascending: false })
@@ -182,24 +197,32 @@ function Devices() {
   return (
     <div className={`${card} mt-4 space-y-3`}>
       <p className={labelCls}>Devices</p>
-      <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+      <ul className="divide-y divide-line/60">
         {devices.map(d => (
           <li key={d.id} className="flex items-center justify-between gap-2 py-2 text-sm">
             <span>
               {d.label}
-              <div className="text-xs text-zinc-400">
+              <div className="text-xs text-faint">
                 added {new Date(d.created_at).toLocaleDateString()}
                 {d.last_seen_at ? ` · last seen ${new Date(d.last_seen_at).toLocaleDateString()}` : ' · never seen'}
               </div>
             </span>
-            <button className={`${btnGhost} text-red-600 dark:text-red-400`} onClick={() => revoke(d.id)}>Revoke</button>
+            <button className={`${btnGhost} text-neg`} onClick={() => revoke(d.id)}>Revoke</button>
           </li>
         ))}
-        {devices.length === 0 && <li className="py-2 text-sm text-zinc-500">No devices yet — add one to forward bank SMS from MacroDroid.</li>}
+        {devices.length === 0 && <li className="py-2 text-sm text-muted">No devices yet — add one to forward bank SMS from MacroDroid.</li>}
       </ul>
       {newToken && (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-950">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Token shown once — store it in MacroDroid now.</p>
+        <div className="rounded-xl border border-warn-ink/25 bg-warn-bg p-3">
+          <p className="text-sm font-medium text-warn-ink">Token shown once — store it in MacroDroid now.</p>
+          {qr && (
+            <div className="mt-2 flex justify-center">
+              {/* white box so QR scans in dark mode */}
+              <div className="rounded-xl bg-white p-2">
+                <img src={qr} alt="Device token QR" width={192} height={192} />
+              </div>
+            </div>
+          )}
           <div className="mt-2 flex items-center gap-2">
             <code className="min-w-0 grow break-all font-mono text-xs">{newToken}</code>
             <button type="button" className={btnGhost} onClick={copy}>{copied ? 'Copied ✓' : 'Copy'}</button>
@@ -211,6 +234,36 @@ function Devices() {
         <button className={btn}>Add device</button>
       </form>
       {error && <p className={errorCls} role="alert">{error}</p>}
+    </div>
+  )
+}
+
+function InstallApp() {
+  const { canInstall, installed, isIos, promptInstall } = useInstall()
+  if (installed) return null
+  return (
+    <div className={`${card} mt-4 space-y-3`}>
+      <p className={labelCls}>Install app</p>
+      {canInstall ? (
+        <button className={btn} onClick={promptInstall}>Install SplitStream</button>
+      ) : isIos ? (
+        <p className="text-sm text-muted">Tap Share → Add to Home Screen to install.</p>
+      ) : (
+        <p className="text-sm text-muted">Open in Chrome on Android to install.</p>
+      )}
+    </div>
+  )
+}
+
+function GetForwarder() {
+  return (
+    <div className={`${card} mt-4 space-y-3`}>
+      <p className={labelCls}>Get the forwarder</p>
+      <p className="text-sm text-muted">
+        Android app that forwards bank SMS automatically. Install it, then scan a new device token QR from here.
+      </p>
+      <a className={`${btn} inline-block`} href={FORWARDER_APK_URL} download>Download APK</a>
+      <p className="text-xs text-faint">Android only · you'll be asked to allow installs from your browser</p>
     </div>
   )
 }

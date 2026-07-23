@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, NavLink, Outlet, Route, Routes } from 'react-router-dom'
 import { AuthPage, AuthProvider, RequireAuth } from './auth'
+import { InstallBanner } from './install'
 import { ExpenseForm } from './pages/ExpenseForm'
 import { GroupDetail } from './pages/GroupDetail'
 import { Groups } from './pages/Groups'
@@ -10,18 +11,20 @@ import { Join } from './pages/Join'
 import { Personal } from './pages/Personal'
 import { Settings } from './pages/Settings'
 import { SplitPending } from './pages/SplitPending'
+import '@fontsource-variable/anek-latin'
 import './styles.css'
 
 const tab = ({ isActive }: { isActive: boolean }) =>
-  `flex-1 py-3 text-center text-sm transition ${
-    isActive ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+  `flex-1 border-t-2 py-3 text-center text-sm transition ${
+    isActive ? 'border-pine font-semibold text-accent' : 'border-transparent text-muted hover:text-ink'
   }`
 
 function Shell() {
   return (
     <>
       <Outlet />
-      <nav className="fixed inset-x-0 bottom-0 flex border-t border-zinc-200 bg-white/90 backdrop-blur pb-[env(safe-area-inset-bottom)] dark:border-zinc-800 dark:bg-zinc-900/90">
+      <InstallBanner />
+      <nav className="fixed inset-x-0 bottom-0 flex border-t border-line bg-surface/90 backdrop-blur pb-[env(safe-area-inset-bottom)]">
         <NavLink to="/" end className={tab}>Groups</NavLink>
         <NavLink to="/personal" className={tab}>Personal</NavLink>
         <NavLink to="/inbox" className={tab}>Inbox</NavLink>

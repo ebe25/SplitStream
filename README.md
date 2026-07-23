@@ -67,6 +67,7 @@ Never put the `service_role` key in any client env file — it bypasses RLS. It 
 - `pnpm test:db` — pgTAP suite: RLS + money math, the release blockers (needs `supabase init` once, then `supabase start`)
 - `pnpm build` — typecheck + production build of the PWA
 - `pnpm sync:functions` — copy the parser into `supabase/functions/_shared/` (run after editing it, before deploying)
+- `pnpm logs` — snapshot debugging context (git state, migrations, last hour of edge-function logs, test run, tool versions) into `logs/<timestamp>/`; run it first when debugging so the state is captured once
 
 CI (`.github/workflows/ci.yml`) runs the unit tests, the web build, and the pgTAP suite on every push.
 
@@ -91,3 +92,33 @@ curl -X POST https://<ref>.supabase.co/functions/v1/ingest-sms \
 ```
 
 MacroDroid recipe: Trigger **SMS Received** (sender contains your bank sender IDs) → Action **HTTP Request** POST to `https://<ref>.supabase.co/functions/v1/ingest-sms`, header `X-Device-Token: <raw token>`, JSON body `{"sender":"[sms_sender]","body":"[sms_message]","received_at":"[system_time_iso]"}`.
+
+## Digests (Phase 4)
+
+Daily push + weekly email summaries (see CONTEXT.md "Digest"), invoked by pg_cron.
+
+Emails go through [Maileroo](https://maileroo.com) (`POST
+https://smtp.maileroo.com/api/v2/emails`, `X-API-Key` header). The sending key
+is bound to a domain — find it under **Domains** in the Maileroo dashboard; the
+`DIGEST_FROM` address must use that domain.
+
+```sh
+supabase functions deploy digests --no-verify-jwt --use-api
+supabase secrets set CRON_SECRET=... EMAIL_API_KEY=<maileroo-sending-key> DIGEST_FROM='SplitStream <digest@<your-maileroo-domain>>' APP_URL=https://<your-app>
+```
+
+A migration schedules the cron calls; it reads the secret from `cron_config`, so
+set the same value there:
+
+```sql
+update cron_config set secret = '<same CRON_SECRET>';
+```
+
+Test:
+
+```sh
+curl -X POST https://<ref>.supabase.co/functions/v1/digests \
+  -H 'Content-Type: application/json' \
+  -H 'X-Cron-Secret: <CRON_SECRET>' \
+  -d '{"kind":"daily"}'
+```

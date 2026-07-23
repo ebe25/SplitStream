@@ -3,13 +3,85 @@
 /* class-based dark mode, toggled on <html> */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+  SplitStream — "banyan & marigold".
+  Deep banyan green (₹-note green: trustworthy, not bank-navy) as the single
+  brand hue; marigold reserved for money that's still pending. Light mode is
+  sage-tinted paper, dark mode is deep green-black — both designed, not mirrored.
+  Semantic vars flip under .dark; Tailwind utilities consume them via @theme inline.
+*/
+:root {
+  --bg: #eff3ef;
+  --surface: #fdfefd;
+  --soft: #e6ede7;
+  --ink: #1c2b24;
+  --muted: #5b6f64;
+  --faint: #8ba094;
+  --line: #d8e1d9;
+  --pine: #0f6b5a;
+  --pine-deep: #0b574a;
+  --pine-soft: #ddece5;
+  --accent: #0e6b5a;
+  --pos: #157a4a;
+  --neg: #c04440;
+  --warn-bg: #f9eed2;
+  --warn-ink: #7d5c0f;
+  --sh-card: 0 1px 2px rgb(28 43 36 / 0.05), 0 6px 20px -12px rgb(28 43 36 / 0.18);
+}
+.dark {
+  --bg: #0c1411;
+  --surface: #131d18;
+  --soft: #1b2822;
+  --ink: #e3ebe5;
+  --muted: #96aa9e;
+  --faint: #657a6f;
+  --line: #24342c;
+  --pine: #157a64;
+  --pine-deep: #1e9179; /* hover brightens in the dark */
+  --pine-soft: #14302a;
+  --accent: #45c3a2;
+  --pos: #4fca8c;
+  --neg: #f08a7f;
+  --warn-bg: #322a12;
+  --warn-ink: #e5c36a;
+  --sh-card: 0 0 #0000; /* borders carry depth in dark mode */
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-soft: var(--soft);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-pine: var(--pine);
+  --color-pine-deep: var(--pine-deep);
+  --color-pine-soft: var(--pine-soft);
+  --color-accent: var(--accent);
+  --color-pos: var(--pos);
+  --color-neg: var(--neg);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-ink: var(--warn-ink);
+  --shadow-card: var(--sh-card);
+  --font-display: "Anek Latin Variable", ui-sans-serif, system-ui, sans-serif;
+  /* body stays on the platform stack: native feel in a PWA, guaranteed ₹ + tabular figures */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+}
+
 @layer base {
   html { color-scheme: light; }
   html.dark { color-scheme: dark; }
 
   body {
-    @apply bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+    @apply bg-bg text-ink antialiased;
   }
+
+  h1, h2, h3 {
+    @apply font-display;
+  }
+
+  ::selection { background: var(--pine-soft); }
 
   /* avoid 300ms double-tap zoom delay on touch */
   button, a, select, label, input { touch-action: manipulation; }

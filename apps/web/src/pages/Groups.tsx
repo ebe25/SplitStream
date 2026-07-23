@@ -24,7 +24,7 @@ export function Groups() {
     load()
   }
 
-  if (groups === null) return <p className="p-8 text-center text-zinc-500">Loading…</p>
+  if (groups === null) return <p className="p-8 text-center text-muted">Loading…</p>
 
   return (
     <main className="mx-auto max-w-xl px-4 pb-24 pt-4">
@@ -37,9 +37,9 @@ export function Groups() {
           <ul className="space-y-2">
             {groups.map(g => (
               <li key={g.id}>
-                <Link to={`/group/${g.id}`} className={`${card} flex items-center justify-between transition hover:border-indigo-400`}>
+                <Link to={`/group/${g.id}`} className={`${card} flex items-center justify-between transition hover:border-pine/50`}>
                   <span className="font-medium">{g.name}</span>
-                  <span className="text-zinc-400">
+                  <span className="text-faint">
                     {g.status !== 'active' && <small className="mr-2 text-xs">{g.status}</small>}→
                   </span>
                 </Link>
@@ -76,36 +76,42 @@ function Onboarding(props: {
   const saveName = () =>
     supabase.from('profiles').update({ display_name: displayName || null }).eq('id', userId).then(() => {})
 
+  const step = (n: number) => (
+    <span aria-hidden="true" className="flex size-6 flex-none items-center justify-center rounded-full bg-pine-soft font-display text-xs font-bold text-accent">
+      {n}
+    </span>
+  )
+
   return (
     <div className="space-y-4">
-      <div className={card}>
-        <h2 className="text-lg font-semibold">
+      <div className="rounded-2xl bg-pine p-5 text-white shadow-card">
+        <h2 className="font-display text-2xl font-bold tracking-tight">
           Welcome{session?.user.email ? `, ${session.user.email.split('@')[0]}` : ''} 👋
         </h2>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-white/80">
           Three steps and you're splitting expenses with your housemates.
         </p>
       </div>
 
       <div className={card}>
-        <p className={labelCls}>1 · Your name (what friends will see)</p>
-        <div className="mt-2 flex gap-2">
+        <p className={`${labelCls} flex items-center gap-2`}>{step(1)} Your name (what friends will see)</p>
+        <div className="mt-3 flex gap-2">
           <input className={input} placeholder="e.g. Vedansh" value={displayName} onChange={e => setDisplayName(e.target.value)} onBlur={saveName} />
         </div>
       </div>
 
       <form onSubmit={props.onCreate} className={card}>
-        <p className={labelCls}>2 · Create your first group</p>
-        <div className="mt-2 flex gap-2">
+        <p className={`${labelCls} flex items-center gap-2`}>{step(2)} Create your first group</p>
+        <div className="mt-3 flex gap-2">
           <input required className={input} placeholder="e.g. Flat 402" value={props.name} onChange={e => props.setName(e.target.value)} />
           <button className={btn}>Create</button>
         </div>
         {props.error && <p className={`${errorCls} mt-2`} role="alert">{props.error}</p>}
       </form>
 
-      <div className={`${card} text-sm text-zinc-500`}>
-        <p className={labelCls}>3 · Invite people</p>
-        <p className="mt-2">
+      <div className={`${card} text-sm text-muted`}>
+        <p className={`${labelCls} flex items-center gap-2`}>{step(3)} Invite people</p>
+        <p className="mt-3">
           Open your group and tap <em>Copy invite link</em> — anyone with the link joins in one tap.
           Got a link from a friend instead? Just open it.
         </p>

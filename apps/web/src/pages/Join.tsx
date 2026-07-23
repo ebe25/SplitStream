@@ -16,7 +16,7 @@ export function Join() {
   }, [code])
 
   return (
-    <main className="p-8 text-center text-zinc-500">
+    <main className="p-8 text-center text-muted">
       {error ? <p className={errorCls} role="alert">{error}</p> : 'Joining…'}
     </main>
   )

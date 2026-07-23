@@ -5,7 +5,9 @@
     "test": "pnpm -r test",
     "test:db": "supabase test db",
     "build": "pnpm --filter web build",
-    "sync:functions": "cp packages/shared/src/parser.ts packages/shared/src/route.ts supabase/functions/_shared/"
+    "sync:functions": "cp packages/shared/src/parser.ts packages/shared/src/route.ts supabase/functions/_shared/",
+    "ship": "supabase db push && pnpm sync:functions && supabase functions deploy ingest-sms --no-verify-jwt --use-api && supabase functions deploy digests --no-verify-jwt --use-api",
+    "logs": "bash scripts/collect-logs.sh"
   },
   "packageManager": "pnpm@9.11.0",
   "engines": {

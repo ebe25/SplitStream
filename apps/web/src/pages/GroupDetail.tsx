@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useUserId } from '../auth'
 import { supabase, type Balance, type Debt, type Group } from '../supabase'
-import { btn, btnGhost, card, errorCls, Header } from '../ui'
+import { btn, btnGhost, card, errorCls, Header, Money, sectionCls } from '../ui'
 
 type Member = { user_id: string; profiles: { display_name: string | null; upi_vpa: string | null } | null }
 type Expense = {
@@ -92,7 +92,7 @@ export function GroupDetail() {
 
   if (!group)
     return (
-      <main className="p-8 text-center text-zinc-500">
+      <main className="p-8 text-center text-muted">
         {error ? <p className={errorCls} role="alert">{error}</p> : 'Loading…'}
       </main>
     )
@@ -105,7 +105,7 @@ export function GroupDetail() {
       <Header title={group.name} back="/" />
 
       <section className={`${card} mb-4 flex items-center justify-between gap-2`}>
-        <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+        <span className="rounded-full bg-soft px-2.5 py-0.5 text-xs font-medium text-muted">
           {group.status}
         </span>
         {group.status === 'active' && (
@@ -123,7 +123,7 @@ export function GroupDetail() {
             </button>
           </span>
         )}
-        {closed && <span className="text-sm text-zinc-500">This group is closed (read-only)</span>}
+        {closed && <span className="text-sm text-muted">This group is closed (read-only)</span>}
       </section>
 
       {!closed && (
@@ -134,14 +134,18 @@ export function GroupDetail() {
       )}
 
       <section className={card}>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">Balances</h2>
-        <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+        <h2 className={sectionCls}>Balances</h2>
+        <ul className="divide-y divide-line/60">
           {balances.map(b => (
-            <li key={b.user_id} className="flex justify-between py-2 text-sm">
+            <li key={b.user_id} className="flex items-baseline justify-between py-2 text-sm">
               <span>{name(b.user_id)}</span>
-              <span className={b.net > 0 ? 'font-medium text-emerald-600 dark:text-emerald-400' : b.net < 0 ? 'font-medium text-red-600 dark:text-red-400' : 'text-zinc-400'}>
-                {b.net > 0 ? `is owed ₹${b.net}` : b.net < 0 ? `owes ₹${-b.net}` : 'settled up'}
-              </span>
+              {b.net > 0 ? (
+                <span className="text-pos">is owed <Money amount={b.net} tone="pos" className="text-base" /></span>
+              ) : b.net < 0 ? (
+                <span className="text-neg">owes <Money amount={-b.net} tone="neg" className="text-base" /></span>
+              ) : (
+                <span className="text-faint">settled up</span>
+              )}
             </li>
           ))}
         </ul>
@@ -149,13 +153,13 @@ export function GroupDetail() {
 
       {debts.length > 0 && (
         <section className={`${card} mt-4`}>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">Settle up</h2>
-          <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <h2 className={sectionCls}>Settle up</h2>
+          <ul className="divide-y divide-line/60">
             {debts.map((d, i) => {
               const vpa = members.find(m => m.user_id === d.to_user)?.profiles?.upi_vpa
               return (
                 <li key={i} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-                  <span>{name(d.from_user)} → {name(d.to_user)}: <strong>₹{d.amount}</strong></span>
+                  <span>{name(d.from_user)} → {name(d.to_user)}: <Money amount={d.amount} className="text-base" /></span>
                   {!closed && d.from_user === userId && (
                     <span className="flex items-center gap-2">
                       {vpa ? (
@@ -166,7 +170,7 @@ export function GroupDetail() {
                           Pay via UPI
                         </a>
                       ) : (
-                        <span className="text-xs text-zinc-400">no UPI id</span>
+                        <span className="text-xs text-faint">no UPI id</span>
                       )}
                       <button className={btnGhost} onClick={() => markPaid(d)}>I paid ✓</button>
                     </span>
@@ -182,31 +186,31 @@ export function GroupDetail() {
       )}
 
       <section className={`${card} mt-4`}>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">Expenses</h2>
+        <h2 className={sectionCls}>Expenses</h2>
         {expenses.length === 0 ? (
-          <p className="py-2 text-sm text-zinc-500">No expenses yet — add the first one.</p>
+          <p className="py-2 text-sm text-muted">No expenses yet — add the first one.</p>
         ) : (
-          <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <ul className="divide-y divide-line/60">
             {expenses.map(e => (
               <li key={e.id} className="py-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <span className="grow font-medium">{e.description ?? 'Expense'}</span>
                   {e.status === 'pending_split' && (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                    <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-medium text-warn-ink">
                       pending split
                     </span>
                   )}
                   {e.status === 'pending_split' && e.paid_by === userId && (
-                    <Link to={`/group/${id}/split/${e.id}`} className="text-xs text-indigo-600 hover:underline dark:text-indigo-400">
+                    <Link to={`/group/${id}/split/${e.id}`} className="text-xs font-medium text-accent hover:underline">
                       Split
                     </Link>
                   )}
-                  <span className="font-semibold">₹{e.amount}</span>
+                  <Money amount={e.amount} className="text-base" />
                 </div>
-                <div className="text-xs text-zinc-500">
+                <div className="text-xs text-muted">
                   paid by {name(e.paid_by)} · {new Date(e.occurred_at).toLocaleDateString()}
                 </div>
-                <div className="mt-0.5 text-xs text-zinc-400">
+                <div className="mt-0.5 text-xs tabular-nums text-faint">
                   {e.expense_splits.map(s => `${name(s.user_id)} ₹${toRupees(Math.round(s.share_amount * 100))}`).join(' · ')}
                 </div>
               </li>
@@ -217,19 +221,19 @@ export function GroupDetail() {
 
       {settlements.length > 0 && (
         <section className={`${card} mt-4`}>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">Settlements</h2>
-          <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <h2 className={sectionCls}>Settlements</h2>
+          <ul className="divide-y divide-line/60">
             {settlements.map(s => (
               <li key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                 <span>
-                  {name(s.from_user)} paid {name(s.to_user)} <strong>₹{s.amount}</strong>{' '}
-                  <span className="text-xs text-zinc-400">({s.status})</span>
+                  {name(s.from_user)} paid {name(s.to_user)} <Money amount={s.amount} />{' '}
+                  <span className="text-xs text-faint">({s.status})</span>
                 </span>
                 {s.status === 'pending' && s.to_user === userId && !closed && (
                   <button className={btnGhost} onClick={() => confirmSettlement(s.id)}>Confirm</button>
                 )}
                 {s.status === 'pending' && s.from_user === userId && (
-                  <span className="text-xs text-zinc-400">awaiting confirmation</span>
+                  <span className="text-xs text-faint">awaiting confirmation</span>
                 )}
               </li>
             ))}

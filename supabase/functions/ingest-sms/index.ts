@@ -310,6 +310,30 @@ Deno.serve(async (req) => {
     await supabase.from('raw_sms').update({ parse_status: 'parsed' }).eq('id', rawSms.id);
     const amount = Math.round(parsed.amount) / 100; // paise -> rupees, 2dp
     const occurredAt = parsed.occurred_at ?? received_at;
+
+    // Duplicate alert (CONTEXT.md): the same real payment announced twice
+    // (bank SMS + UPI app SMS) with differing bank refs — same ref was already
+    // caught by dedupe_hash. Equal amount + direction in the window = duplicate.
+    // ponytail: 2-min fixed window; make configurable if false-positives appear
+    // with recurring equal payments.
+    const t = Date.parse(occurredAt);
+    const { data: dupes, error: dupErr } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('user_id', device.user_id)
+      .eq('direction', parsed.direction)
+      .eq('amount', amount.toFixed(2))
+      .gte('occurred_at', new Date(t - 2 * 60 * 1000).toISOString())
+      .lte('occurred_at', new Date(t + 2 * 60 * 1000).toISOString())
+      .limit(1);
+    if (dupErr) {
+      console.error(dupErr);
+      return json(500, { error: 'duplicate check failed' });
+    }
+    if (dupes?.length) {
+      return json(200, { status: 'created', parsed: true, duplicate_alert: true });
+    }
+
     const { data: txn, error: txnErr } = await supabase
       .from('transactions')
       .insert({

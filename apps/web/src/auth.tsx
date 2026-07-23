@@ -30,7 +30,7 @@ export const useUserId = () => useContext(AuthCtx).session?.user.id ?? ''
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, loading } = useSession()
   const location = useLocation()
-  if (loading) return <p className="p-8 text-center text-zinc-500">Loading…</p>
+  if (loading) return <p className="p-8 text-center text-muted">Loading…</p>
   if (!session) return <Navigate to="/auth" state={{ from: location.pathname }} replace />
   return <>{children}</>
 }
@@ -76,11 +76,11 @@ export function AuthPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-8">
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl bg-indigo-600 text-2xl font-bold text-white">
-          S
+        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-pine font-display text-3xl font-bold text-white shadow-card">
+          ₹
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight">SplitStream</h1>
-        <p className="mt-1 text-sm text-zinc-500">Shared expenses, automatically captured.</p>
+        <h1 className="text-3xl font-bold tracking-tight">SplitStream</h1>
+        <p className="mt-1.5 text-sm text-muted">Shared expenses, automatically captured.</p>
       </div>
 
       <div className={card}>
@@ -93,10 +93,10 @@ export function AuthPage() {
           </button>
         </div>
 
-        <div className="my-4 flex items-center gap-3 text-xs text-zinc-400" aria-hidden="true">
-          <span className="h-px grow bg-zinc-200 dark:bg-zinc-800" />
+        <div className="my-4 flex items-center gap-3 text-xs text-faint" aria-hidden="true">
+          <span className="h-px grow bg-line" />
           or
-          <span className="h-px grow bg-zinc-200 dark:bg-zinc-800" />
+          <span className="h-px grow bg-line" />
         </div>
 
         {!sent ? (
@@ -112,7 +112,7 @@ export function AuthPage() {
             <button className={`${btn} w-full`} disabled={busy}>
               {busy ? 'Sending…' : 'Send login code'}
             </button>
-            <p className="text-center text-xs text-zinc-500">No password — we email you a 6-digit code.</p>
+            <p className="text-center text-xs text-muted">No password — we email you a 6-digit code.</p>
           </form>
         ) : (
           <form onSubmit={verify} className="space-y-4">
@@ -121,14 +121,14 @@ export function AuthPage() {
               <input
                 id="code" name="code" inputMode="numeric" pattern="\d{6}" required
                 autoComplete="one-time-code" spellCheck={false} placeholder="123456"
-                className={`${input} mt-1 text-center text-xl tracking-[0.4em]`}
+                className={`${input} mt-1 text-center text-xl font-semibold tracking-[0.4em] tabular-nums`}
                 value={code} onChange={e => setCode(e.target.value)}
               />
             </div>
             <button className={`${btn} w-full`} disabled={busy}>
               {busy ? 'Verifying…' : 'Verify & sign in'}
             </button>
-            <button type="button" className="w-full text-center text-sm text-indigo-600 dark:text-indigo-400" onClick={() => setSent(false)}>
+            <button type="button" className="w-full text-center text-sm font-medium text-accent" onClick={() => setSent(false)}>
               Use a different email
             </button>
           </form>

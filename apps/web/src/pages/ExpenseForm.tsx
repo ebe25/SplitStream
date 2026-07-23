@@ -99,12 +99,12 @@ export function ExpenseForm() {
 
         <div className={card}>
           <p className={labelCls}>Split</p>
-          <div className="mt-2 flex gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800" role="tablist">
+          <div className="mt-2 flex gap-1 rounded-xl bg-soft p-1" role="tablist">
             {MODES.map(m => (
               <button
                 type="button" key={m} role="tab" aria-selected={m === mode}
                 className={`flex-1 rounded-lg py-1.5 text-sm capitalize transition ${
-                  m === mode ? 'bg-white font-medium shadow-sm dark:bg-zinc-700' : 'text-zinc-500'
+                  m === mode ? 'bg-surface font-semibold text-ink shadow-sm' : 'text-muted'
                 }`}
                 onClick={() => setMode(m)}
               >
@@ -113,12 +113,12 @@ export function ExpenseForm() {
             ))}
           </div>
 
-          <ul className="mt-3 divide-y divide-zinc-100 dark:divide-zinc-800">
+          <ul className="mt-3 divide-y divide-line/60">
             {members.map(m => (
               <li key={m.user_id} className="flex items-center gap-3 py-2">
                 <label className="flex grow items-center gap-2 text-sm">
                   <input
-                    type="checkbox" className="size-4 accent-indigo-600"
+                    type="checkbox" className="size-4 accent-pine"
                     checked={included.has(m.user_id)} onChange={() => toggle(m.user_id)}
                   />
                   {name(m)}
@@ -133,14 +133,14 @@ export function ExpenseForm() {
                   />
                 )}
                 {splits && included.has(m.user_id) && (
-                  <span className="w-20 text-right text-sm tabular-nums text-zinc-500">₹{toRupees(splits[m.user_id])}</span>
+                  <span className="w-20 text-right text-sm tabular-nums text-muted">₹{toRupees(splits[m.user_id])}</span>
                 )}
               </li>
             ))}
           </ul>
 
           {splits && mode === 'equal' && participants.length > 0 && (
-            <p className="mt-2 text-center text-sm text-zinc-500">
+            <p className="mt-2 text-center text-sm text-muted">
               ₹{amount} ÷ {participants.length} = ₹{toRupees(splits[participants[0]])}
             </p>
           )}

@@ -68,11 +68,28 @@ _Last updated: 2026-07-19_
 - [x] Deployed 2026-07-20: 0005 pushed (local=remote 0001–0005), `ingest-sms` redeployed with matcher, 401 auth-reject verified live
 - [ ] Acceptance: pay via UPI → settled-pending auto; one-tap confirm
 
-## Phase 4 — Hardening & reach
-- [ ] Kotlin forwarder (WorkManager)
-- [ ] raw-SMS retention (pg_cron, 30 days)
-- [ ] Dedupe tuning (bank+UPI double alerts)
-- [ ] Digests; budgets/reports/comments/CSV once real usage exists
+## Phase 4 — Hardening & reach — CODE DONE, deploy on Vedansh
+- [x] Grilled + documented: QR pairing, APK sideload via PWA button, dual-channel digests (CONTEXT.md updated)
+- [x] Kotlin forwarder (`forwarder-android/`): QR/paste pairing → EncryptedSharedPreferences, sender whitelist, SMS_RECEIVED → WorkManager POST (Doze-safe, retries), delivery log — NOT compiled (no JDK/Android SDK on this machine; `./gradlew assembleDebug` on a machine with JDK 17 + SDK 34)
+- [x] PWA: device-token QR in Settings + "Get the forwarder" APK download button (expects GitHub release asset `splitstream-forwarder.apk`)
+- [x] `0006_hardening.sql`: `purge_old_sms()` (30-day retention; failed SMS kept while review open), dedupe index, `cron_config`, guarded pg_cron/pg_net schedules — docker-validated + pgTAP
+- [x] Dedupe tuning in ingest: equal amount+direction within ±2 min = duplicate alert, no second transaction
+- [x] `digests` edge function: daily push + weekly Resend email, X-Cron-Secret auth
+- [x] Root `pnpm deploy` script added
+- [x] Deployed 2026-07-23: 0006 pushed, both functions live, secrets set, cron_config updated, daily+weekly smoke-tested (script renamed `pnpm ship` — `pnpm deploy` is a pnpm builtin)
+- [x] Run-logs infra: `pnpm logs` → `logs/<timestamp>/` (git, migrations, function logs, tests, versions) + project CLAUDE.md conventions
+- [x] Email provider: Maileroo (Vedansh's pick, account created) — digests swapped to `smtp.maileroo.com/api/v2/emails`, `EMAIL_API_KEY` secret set, function redeployed; key verified live (auth OK)
+- [x] `DIGEST_FROM` set (`digest@65cbf34d9a709eba.maileroo.org`) — real email delivered end-to-end ✓
+- [x] Real PWA icon: pine gradient ₹-with-stream mark (512 + 192), replaces placeholder squares
+- [x] PWA install prompt: `beforeinstallprompt` banner above tab bar + Settings "Install app" card (iOS Share→Add-to-Home-Screen hint; dismiss persisted)
+- [x] APK release automation: `.github/workflows/release-apk.yml` (tag `forwarder-v*` or manual run → builds + attaches `splitstream-forwarder.apk` to a GitHub release) + `docs/forwarder-release.md` guide
+- [ ] Build + publish forwarder APK (JDK 17 + Android SDK machine → GitHub Releases as `splitstream-forwarder.apk`)
+- [x] UI/UX revamp (frontend-design plugin): "banyan & marigold" — deep ₹-note green + marigold-for-pending palette as Tailwind v4 tokens, Anek Latin display font, `Money` component (Indian grouping, tabular nums), deliberate light/dark modes, auth + onboarding hero treatment; 47 tests + build green
+
+### Parked (revisit once real usage exists)
+- [ ] CSV export (per-group + personal)
+- [ ] Category budgets + monthly personal report
+- [ ] Expense comments
 
 ## Cross-cutting
 - [x] SQL tests for RLS + balance functions (written; run via `supabase test db` after `supabase init`)

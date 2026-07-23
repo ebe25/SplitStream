@@ -20,5 +20,14 @@ The routing branch that recognizes a bank transaction as a settlement instead of
 ## "I paid"
 The payer's manual claim of settlement after a UPI deep-link tap, recorded pending. The SMS matcher and "I paid" dedupe against each other — an equal pending settlement for the same pair, group, and amount is never recorded twice.
 
+## Forwarder
+The native Android app whose only job is relaying bank SMS to ingestion. It pairs to an account by scanning the QR of a device token minted in the web app (paste fallback); it is distributed by direct APK download from the web app, never a store. One forwarder = one Device.
+
+## Duplicate alert
+The same real-world transaction announced twice (bank SMS + UPI app SMS). Recognized by equal amount and direction within a short window with differing bank references; only the first becomes a transaction.
+
+## Digest
+A periodic summary of activity (transactions captured, amounts, items awaiting action). Delivered daily as a push notification and weekly by email.
+
 ## Group lifecycle
 `active` → accepts expenses and settlements. `settling` → settlements only. `closed` → read-only. Any member may move a group between active and settling (peers, no admin role). Closing requires every member's net to be zero and is irreversible.

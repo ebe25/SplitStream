@@ -17,8 +17,8 @@ export default defineConfig({
         name: 'SplitStream',
         short_name: 'SplitStream',
         description: 'Shared expenses, automatically captured',
-        theme_color: '#4f46e5',
-        background_color: '#ffffff',
+        theme_color: '#0f6b5a',
+        background_color: '#eff3ef',
         display: 'standalone',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },

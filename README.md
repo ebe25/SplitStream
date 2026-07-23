@@ -56,7 +56,9 @@ pnpm --filter web dev
 2. `supabase login && supabase link --project-ref <ref>`
 3. `pnpm ship` — db push + deploy both edge functions.
 4. Auth: enable Email OTP + Google/GitHub providers; add the deployed site URL under **Authentication → URL Configuration**.
-5. Secrets: see Digests below + `VAPID_*` keys for push (`supabase secrets set --env-file supabase/functions/.env`).
+5. Auth emails: the login-code email needs custom SMTP (Maileroo works) configured under **Project Settings → Auth → SMTP** — the free tier can't customize email templates on the default provider, and the default Magic Link template contains a link but **no `{{ .Token }}`**, so OTP codes never appear. After SMTP is set, put `{{ .Token }}` in the Magic Link template and set OTP length to 6 (the UI expects 6 digits).
+6. Web hosting: Vercel, project root `apps/web` — `apps/web/vercel.json` rewrites all routes to `index.html` (BrowserRouter deep links 404 without it).
+7. Secrets: see Digests below + `VAPID_*` keys for push (`supabase secrets set --env-file supabase/functions/.env`).
 
 Never put the `service_role` key in any client env file — it bypasses RLS. Edge Function secrets only.
 
@@ -88,7 +90,7 @@ The normal client is the Kotlin forwarder (`forwarder-android/`). For quick pipe
 
 Daily push + weekly email summaries (see CONTEXT.md "Digest"), scheduled by pg_cron.
 
-Emails go through [Maileroo](https://maileroo.com) (`POST https://smtp.maileroo.com/api/v2/emails`, `X-API-Key` header). The sending key is bound to a domain — find it under **Domains** in the Maileroo dashboard; `DIGEST_FROM` must use that domain.
+Emails go through [Maileroo](https://maileroo.com) (`POST https://smtp.maileroo.com/api/v2/emails`, `X-API-Key` header). The sending key is bound to a domain — find it under **Domains** in the Maileroo dashboard; `DIGEST_FROM` must use that domain. Note: the auto-generated Maileroo sandbox subdomain passes SPF/DKIM but has zero reputation, so mail lands in spam — verify a domain you own before inviting real users (parked in the checklist).
 
 ```sh
 supabase secrets set CRON_SECRET=... EMAIL_API_KEY=<maileroo-sending-key> DIGEST_FROM='SplitStream <digest@<your-maileroo-domain>>' APP_URL=https://<your-app>

@@ -1,6 +1,6 @@
 # SplitStream — Progress Checklist
 
-_Last updated: 2026-07-19_
+_Last updated: 2026-07-24_
 
 ## 0. Setup & repo layout — DONE (except publish)
 - [x] Monorepo layout (`apps/web`, `packages/shared`, `supabase/`, `forwarder-android/`, `fixtures/sms/`)
@@ -11,8 +11,8 @@ _Last updated: 2026-07-19_
 - [x] Supabase cloud project created + linked (ref `gknezlfpalsrqttuxusn`)
 - [x] `apps/web/.env.local` filled with cloud URL + anon key
 - [X] GitHub repo + first commit
-- [ ] `supabase init` (config.toml — needed only for local stack / `supabase test db`)
-- [ ] Vercel project
+- [x] `supabase init` (config.toml — needed only for local stack / `supabase test db`)
+- [x] Vercel project
 
 ## Phase 0 — Ledger core — CODE DONE, deploy pending
 - [x] `0001_ledger.sql`: 7 ledger tables, auth→profile trigger, deferred split-sum constraint
@@ -30,8 +30,8 @@ _Last updated: 2026-07-19_
 - [x] Design audit (vercel web-design-guidelines skill): touch-action, focus-visible, labels/autocomplete, theme-color sync
 - [x] vite-plugin-pwa: manifest + service worker + icons; production build green
 - [x] OAuth: GitHub + Google sign-in (Font Awesome brand icons), providers enabled in dashboard, `0002_profile_names.sql` pushed (real names from OAuth metadata)
-- [ ] Replace placeholder icons (solid squares) with real ones
-- [ ] Deploy to Vercel + add URL in Supabase Auth → URL Configuration
+- [x] Replace placeholder icons (solid squares) with real ones (pine ₹ mark, Phase 4)
+- [x] Deploy to Vercel (https://split-stream-web.vercel.app) + site URL set in Supabase Auth
 - [ ] Acceptance: two phones, invite → expense → identical simplified debts → settlement zeroes; installs to Android home screen
 - [ ] RLS tests in CI
 
@@ -83,13 +83,17 @@ _Last updated: 2026-07-19_
 - [x] Real PWA icon: pine gradient ₹-with-stream mark (512 + 192), replaces placeholder squares
 - [x] PWA install prompt: `beforeinstallprompt` banner above tab bar + Settings "Install app" card (iOS Share→Add-to-Home-Screen hint; dismiss persisted)
 - [x] APK release automation: `.github/workflows/release-apk.yml` (tag `forwarder-v*` or manual run → builds + attaches `splitstream-forwarder.apk` to a GitHub release) + `docs/forwarder-release.md` guide
-- [ ] Build + publish forwarder APK (JDK 17 + Android SDK machine → GitHub Releases as `splitstream-forwarder.apk`)
+- [x] Build + publish forwarder APK (JDK 17 + Android SDK machine → GitHub Releases as `splitstream-forwarder.apk`)
 - [x] UI/UX revamp (frontend-design plugin): "banyan & marigold" — deep ₹-note green + marigold-for-pending palette as Tailwind v4 tokens, Anek Latin display font, `Money` component (Indian grouping, tabular nums), deliberate light/dark modes, auth + onboarding hero treatment; 47 tests + build green
+- [x] Fix login OTP email (2026-07-24): magic-link template had no `{{ .Token }}` (link only) + OTP length was 8 vs UI's 6 + built-in mailer throttled at 2/hr — patched via management API: custom SMTP → Maileroo (`splitstream@…maileroo.org`), template/subject now carry the code, length 6; test OTP sent 200 ✓
+- [x] Fix SPA refresh 404 on Vercel (2026-07-24): `apps/web/vercel.json` with rewrite → `/index.html` (commit + redeploy on Vedansh)
+- [x] Motion pass (2026-07-24): `motion` + `lottie-react` added — `src/anim.tsx` (Lottie pine-arc `Loading` replacing 5 text states, `PageFade` route transitions keyed on pathname + reduced-motion respected, `Confetti` burst); GroupDetail celebrations on settlement confirm/record + transition-to-settled banner, spring layout anims on settle-up/settlement rows, whileTap on pay buttons; favicon + apple-touch-icon linked in index.html; 47 tests + build green, auth page verified in browser
 
 ### Parked (revisit once real usage exists)
 - [ ] CSV export (per-group + personal)
 - [ ] Category budgets + monthly personal report
 - [ ] Expense comments
+- [ ] Custom send domain (before inviting housemates): login-code + digest emails spam-folder because sender is Maileroo sandbox subdomain (`65cbf34d9a709eba.maileroo.org` — SPF/DKIM/DMARC all pass, zero domain reputation). Fix: buy domain → verify in Maileroo → repoint `smtp_admin_email` + `DIGEST_FROM`. Interim: "Not spam" once trains own inbox
 
 ## Cross-cutting
 - [x] SQL tests for RLS + balance functions (written; run via `supabase test db` after `supabase init`)

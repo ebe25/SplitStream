@@ -1,6 +1,12 @@
 # ADR 0002 — Multi-VPA identity + UPI-app notification capture
 
-Date: 2026-07-24 · Status: accepted (design; implementation pending)
+Date: 2026-07-24 · Status: accepted (phases 1–2 implemented; templates pending on captured samples)
+
+Amendment 2026-07-24 (grill session): channel priority is the ingest race —
+notifications arrive first and win; the later bank SMS is absorbed by the
+±2-min duplicate window (no enrichment, no confirm-flag until a real misparse
+appears). Unknown VPA suffix surfaces as an inline hint at registration, not a
+review item (zero plumbing; revisit if unknown handles get common).
 
 ## Context
 

@@ -1,5 +1,6 @@
 export * from './parser'
 export * from './route'
+export * from './vpaProviders'
 
 export type SplitMode = 'equal' | 'exact' | 'percent' | 'shares'
 

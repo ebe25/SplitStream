@@ -11,8 +11,30 @@ android {
         applicationId = "com.splitstream.forwarder"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
+    }
+
+    // Release signing from env (CI decodes the keystore from a GH secret).
+    // PKCS12 minted with openssl — no JDK needed. Losing this keystore = new
+    // signature = every user must uninstall/reinstall.
+    val keystorePath: String? = System.getenv("FORWARDER_KEYSTORE")
+    signingConfigs {
+        create("release") {
+            if (keystorePath != null) {
+                storeFile = file(keystorePath)
+                storeType = "pkcs12"
+                storePassword = System.getenv("FORWARDER_KEYSTORE_PASSWORD")
+                keyAlias = "splitstream"
+                keyPassword = System.getenv("FORWARDER_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = if (keystorePath != null) signingConfigs.getByName("release") else null
+        }
     }
 
     compileOptions {

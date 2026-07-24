@@ -1,15 +1,11 @@
 package com.splitstream.forwarder
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 
@@ -20,13 +16,6 @@ class MainActivity : AppCompatActivity() {
     private val scanLauncher = registerForActivityResult(ScanContract()) { result ->
         result.contents?.let { findViewById<EditText>(R.id.token).setText(it.trim()) }
     }
-
-    private val smsPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (!granted) {
-                Toast.makeText(this, "SMS permission denied — nothing will be forwarded", Toast.LENGTH_LONG).show()
-            }
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,10 +50,11 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, LogActivity::class.java))
         }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            smsPermission.launch(Manifest.permission.RECEIVE_SMS)
+        findViewById<Button>(R.id.setupGuide).setOnClickListener {
+            startActivity(Intent(this, SetupActivity::class.java))
         }
+
+        // first run: the guided tour owns permissions and pairing
+        if (!prefs.setupDone) startActivity(Intent(this, SetupActivity::class.java))
     }
 }

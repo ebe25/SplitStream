@@ -268,8 +268,29 @@ function GetForwarder() {
       <p className="text-sm text-muted">
         Android app that forwards bank SMS automatically. Install it, then scan a new device token QR from here.
       </p>
-      <a className={`${btn} inline-block`} href={FORWARDER_APK_URL} download>Download APK</a>
-      <p className="text-xs text-faint">Android only · you'll be asked to allow installs from your browser</p>
+      {/* Play Protect auto-blocks browser-downloaded SMS apps in India; installs
+          via Obtainium (session-based) are exempt from that AND from Android 13+
+          "restricted settings". So: Obtainium first, direct APK as fallback. */}
+      <ol className="list-decimal space-y-1 pl-5 text-sm text-muted">
+        <li>
+          Install{' '}
+          <a className="font-medium text-accent underline" href="https://github.com/ImranR98/Obtainium/releases/latest" target="_blank" rel="noreferrer">
+            Obtainium
+          </a>{' '}
+          (one time — it installs and updates apps straight from GitHub)
+        </li>
+        <li>
+          Tap{' '}
+          <a className="font-medium text-accent underline" href="obtainium://add/https://github.com/ebe25/SplitStream">
+            Add SplitStream forwarder to Obtainium
+          </a>
+        </li>
+        <li>Install from inside Obtainium, then grant SMS permission when asked</li>
+      </ol>
+      <a className={`${btnGhost} inline-block`} href={FORWARDER_APK_URL} download>Direct APK download</a>
+      <p className="text-xs text-faint">
+        Direct download may be blocked by Play Protect on Indian devices — use Obtainium if it is.
+      </p>
     </div>
   )
 }

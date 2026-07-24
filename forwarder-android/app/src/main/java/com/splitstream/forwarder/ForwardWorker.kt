@@ -28,6 +28,7 @@ class ForwardWorker(context: Context, params: WorkerParameters) : Worker(context
             .put("sender", sender)
             .put("body", body)
             .put("received_at", receivedAt)
+            .apply { inputData.getString("source")?.let { put("source", it) } } // absent = server defaults to 'sms'
             .toString()
 
         val request = Request.Builder()

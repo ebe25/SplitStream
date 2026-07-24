@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Set up SMS forwarding"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/setupProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Step 1 of 5" />
+
+        <!-- step 1: SMS -->
+        <TextView
+            android:id="@+id/stepSmsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="1. Allow SMS access"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bank SMS are read on this phone and only transaction alerts from your whitelisted banks are forwarded. Messages never leave the device otherwise." />
+
+        <Button
+            android:id="@+id/stepSmsBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Allow SMS" />
+
+        <!-- step 2: battery -->
+        <TextView
+            android:id="@+id/stepBatteryTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="2. Keep it running in background"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Without this, some phones pause the forwarder after a few days and SMS arrive late." />
+
+        <Button
+            android:id="@+id/stepBatteryBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Disable battery optimisation" />
+
+        <!-- step 3: payment-app notification access (ADR 0002 capture mode) -->
+        <TextView
+            android:id="@+id/stepNotifTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="3. Catch payments before the SMS lands"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bank SMS can arrive late or not at all. With notification access, payments from GPay, PhonePe and Paytm are captured the moment the app announces them. Only those apps are read." />
+
+        <Button
+            android:id="@+id/stepNotifBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Allow notification access" />
+
+        <!-- step 4: pair -->
+        <TextView
+            android:id="@+id/stepPairTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="4. Pair with SplitStream"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="In the SplitStream app: Settings → Devices → Add device, then scan the QR it shows." />
+
+        <Button
+            android:id="@+id/stepPairBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Scan pairing QR" />
+
+        <!-- step 5: verify -->
+        <TextView
+            android:id="@+id/stepVerifyTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="5. See your first forwarded SMS"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pay anyone ₹1 by UPI (or wait for any bank SMS). It shows up in the delivery log here and in your SplitStream inbox within seconds." />
+
+        <Button
+            android:id="@+id/stepVerifyBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Open delivery log" />
+
+        <Button
+            android:id="@+id/setupDone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Skip for now" />
+    </LinearLayout>
+</ScrollView>

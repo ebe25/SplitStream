@@ -1,3 +1,4 @@
+import { vpaProvider } from '@splitstream/shared'
 import { useEffect, useState } from 'react'
 import { Loading } from './anim'
 import { useUserId } from './auth'
@@ -29,6 +30,7 @@ export function VpaEditor({ vpas, onChange }: { vpas: UserVpa[]; onChange: () =>
   const userId = useUserId()
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
+  const [hint, setHint] = useState('')
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,6 +39,10 @@ export function VpaEditor({ vpas, onChange }: { vpas: UserVpa[]; onChange: () =>
     setError('')
     const { error } = await supabase.from('user_vpas').insert({ user_id: userId, vpa })
     if (error && error.code !== '23505') return setError(error.message)
+    // ponytail: inline note, not the ADR's review item — add review-item plumbing if unknown handles become common
+    setHint(vpaProvider(vpa) === null
+      ? `Unknown UPI app for @${vpa.split('@').pop()} — payment capture may not cover it yet.`
+      : '')
     setValue('')
     await syncPrimary(userId)
     onChange()
@@ -81,6 +87,7 @@ export function VpaEditor({ vpas, onChange }: { vpas: UserVpa[]; onChange: () =>
         <button className={btn}>Add</button>
       </form>
       {error && <p className={errorCls} role="alert">{error}</p>}
+      {hint && <p className="text-sm text-muted">{hint}</p>}
     </div>
   )
 }

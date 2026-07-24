@@ -29,6 +29,13 @@ class Prefs(context: Context) {
         get() = plain.getString("url", DEFAULT_URL)!!
         set(value) = plain.edit().putString("url", value).apply()
 
+    var setupDone: Boolean
+        get() = plain.getBoolean("setup_done", false)
+        set(value) = plain.edit().putBoolean("setup_done", value).apply()
+
+    // any successful delivery ever — drives the setup tour's last step
+    fun hasForwarded(): Boolean = plain.getString("log", "[]")!!.contains("sent (")
+
     var whitelist: List<String>
         get() = plain.getString("whitelist", DEFAULT_WHITELIST)!!
             .split(',').map { it.trim() }.filter { it.isNotEmpty() }
@@ -36,6 +43,24 @@ class Prefs(context: Context) {
 
     fun matchesWhitelist(sender: String): Boolean =
         whitelist.any { sender.contains(it, ignoreCase = true) }
+
+    var packageWhitelist: List<String>
+        get() = plain.getString("package_whitelist", DEFAULT_PACKAGE_WHITELIST)!!
+            .split(',').map { it.trim() }.filter { it.isNotEmpty() }
+        set(value) = plain.edit().putString("package_whitelist", value.joinToString(",")).apply()
+
+    // ponytail: single last-fingerprint slot — only cuts back-to-back reposts of one
+    // notification; the server's ±2-min dup window is the real backstop.
+    fun shouldForwardNotif(fp: Int): Boolean {
+        val now = System.currentTimeMillis()
+        if (plain.getInt("last_notif_fp", 0) == fp &&
+            now - plain.getLong("last_notif_at", 0) < 60_000
+        ) {
+            return false
+        }
+        plain.edit().putInt("last_notif_fp", fp).putLong("last_notif_at", now).apply()
+        return true
+    }
 
     // --- delivery log: newest-first ring buffer of LOG_MAX entries in one JSON string ---
 
@@ -60,6 +85,9 @@ class Prefs(context: Context) {
     companion object {
         const val DEFAULT_URL = "https://gknezlfpalsrqttuxusn.supabase.co/functions/v1/ingest-sms"
         const val DEFAULT_WHITELIST = "HDFC,ICICI,SBI,AXIS,KOTAK,IDFC,PNB,BOB"
+        // GPay, PhonePe, Paytm
+        const val DEFAULT_PACKAGE_WHITELIST =
+            "com.google.android.apps.nbu.paisa.user,com.phonepe.app,net.one97.paytm"
         private const val LOG_MAX = 50
         private val LOG_LOCK = Any()
         private val TIME_FMT =

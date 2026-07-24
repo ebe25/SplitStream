@@ -100,9 +100,18 @@ _Last updated: 2026-07-24_
 - [x] `0009_user_vpas.sql`: `user_vpas` table (owner RLS + pgTAP, 40 db tests green), backfill from `profiles.upi_vpa` — applied locally, cloud push pending (`raw_sms.source` deferred to notification step)
 - [x] Post-login UPI gate (`RequireVpa` in `vpas.tsx`): first login blocks on adding ≥1 UPI ID (skippable, persisted); shared `VpaEditor` chips UI also replaces the single-VPA field in Settings; `profiles.upi_vpa` auto-syncs to oldest VPA (pay links unchanged)
 - [x] `buildContext` unions co-member VPAs from `user_vpas` with legacy `profiles.upi_vpa` — settlement matching sees every registered VPA
-- [ ] `vpaProviders.ts` in `packages/shared`: suffix→provider map from ADR 0002 + lookup; unknown-suffix ⇒ review item
-- [ ] Forwarder: `NotificationListenerService` + package whitelist (GPay/PhonePe/Paytm), capture mode (forward raw title+text as `source: 'app_notification'`)
+- [x] `vpaProviders.ts` in `packages/shared`: suffix→provider map from ADR 0002 + lookup; unknown-suffix ⇒ inline hint in `VpaEditor` (deliberate downgrade from ADR's review item — zero plumbing, revisit if unknown handles get common)
+- [x] Forwarder: `NotificationListenerService` + package whitelist (GPay/PhonePe/Paytm), capture mode (forward raw title+text as `source: 'app_notification'`); `0010` adds `raw_sms.source`; notification-access = step 3 of the setup tour (tour now 5 steps)
+- [x] Grill session 2026-07-24: notification-vs-SMS priority = ingest race (notification wins naturally, no code); SMS-arrives-second = dup-window no-op (no enrich/confirm-flag); PWA push ask = skippable `PushGate` step after `RequireVpa`
 - [ ] Notification templates from captured samples (`fixtures/notifications/corpus.json`) → `pnpm reprocess` heals capture backlog
+- [ ] Diagnose 2026-07-24 missed live txn: function log empty ⇒ SMS never reached ingest — check phone Messages + forwarder Log screen (whitelist miss vs battery-kill vs SMS never delivered)
+- [x] ICICI + Kotak credit templates from real captured SMS (2026-07-24, 50 tests green); backlog healed via `pnpm reprocess` (3 reparsed, 0 failed)
+- [x] Distribution research (deep-research, adversarially verified 2026-07-24): Play Protect auto-BLOCKS browser-sideloaded SMS APKs in India (no override, signing irrelevant); session installers (Obtainium/F-Droid) exempt from both Play Protect classification and Android 13+ restricted settings; Play policy allows RECEIVE_SMS under "SMS-based money management" exception; internal testing = 100 testers, no 12-tester gate; dev-verification cliff: India not in Sept-2026 wave, hobbyist tier only 20 devices
+- [x] Release signing: PKCS12 keystore minted (openssl, `secrets/` gitignored — BACK IT UP), `build.gradle.kts` signingConfig from env, `release-apk.yml` builds `assembleRelease` — needs `FORWARDER_KEYSTORE_B64` + `FORWARDER_KEYSTORE_PASSWORD` repo secrets before next tag (see docs/forwarder-release.md)
+- [x] PWA "Get the forwarder": Obtainium-first install steps (`obtainium://add/…` deep link), direct APK demoted to fallback with Play Protect warning
+- [x] Forwarder guided setup tour (`SetupActivity`): 4 state-aware steps — SMS permission (with restricted-settings fallback to app settings), battery-optimisation exemption, QR pairing, first-forward verification via delivery log; auto-opens on first run, re-entrant from "Setup guide" button. NOT compiled locally (no JDK) — first build happens in CI on tag
+- [ ] Set the two keystore secrets on GitHub + tag `forwarder-v1.1` (signature change: uninstall old forwarder before installing; re-pair via QR)
+- [ ] Later (~before circle grows): Play Console account ($25) → internal testing track + SMS declaration under money-management exception; full dev verification covers the 2027 global sideload cliff
 - [ ] Acceptance: pay via GPay on a bank whose SMS template we lack → transaction still lands (notification path); second VPA settlement match works
 
 ### Parked (revisit once real usage exists)

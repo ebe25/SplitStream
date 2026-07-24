@@ -24,17 +24,20 @@ Deno.serve(async (req) => {
   const token = req.headers.get('x-device-token');
   if (!token) return json(401, { error: 'missing device token' });
 
-  let payload: { sender?: unknown; body?: unknown; received_at?: unknown };
+  let payload: { sender?: unknown; body?: unknown; received_at?: unknown; source?: unknown };
   try {
     payload = await req.json();
   } catch {
     return json(400, { error: 'invalid JSON' });
   }
-  const { sender, body, received_at } = payload;
+  const { sender, body, received_at, source } = payload;
   if (typeof sender !== 'string' || !sender ||
       typeof body !== 'string' || !body ||
       typeof received_at !== 'string' || Number.isNaN(Date.parse(received_at))) {
     return json(400, { error: 'sender, body, received_at (ISO) required' });
+  }
+  if (source !== undefined && source !== 'sms' && source !== 'app_notification') {
+    return json(400, { error: "source must be 'sms' or 'app_notification'" });
   }
   if (body.length > 2000) return json(400, { error: 'body too long' });
 
@@ -57,6 +60,7 @@ Deno.serve(async (req) => {
       received_at,
       dedupe_hash: dedupeHash,
       parse_status: 'pending',
+      ...(source ? { source } : {}), // omit → column default 'sms'
     })
     .select('id')
     .single();

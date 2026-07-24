@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, NavLink, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { PageFade } from './anim'
 import { AuthPage, AuthProvider, RequireAuth } from './auth'
+import { PushGate } from './pushgate'
 import { RequireVpa } from './vpas'
 import { InstallBanner } from './install'
 import { ExpenseForm } from './pages/ExpenseForm'
@@ -47,7 +48,7 @@ createRoot(document.getElementById('root')!).render(
         <MotionConfig reducedMotion="user">
         <Routes>
           <Route path="/auth" element={<PageFade><AuthPage /></PageFade>} />
-          <Route element={<RequireAuth><RequireVpa><Shell /></RequireVpa></RequireAuth>}>
+          <Route element={<RequireAuth><RequireVpa><PushGate><Shell /></PushGate></RequireVpa></RequireAuth>}>
             <Route path="/" element={<Groups />} />
             <Route path="/group/:id" element={<GroupDetail />} />
             <Route path="/group/:id/expense/new" element={<ExpenseForm />} />

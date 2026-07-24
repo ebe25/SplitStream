@@ -18,11 +18,17 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@v3
-      # debug-signed APK is fine here: it's installable for sideload and
-      # needs no keystore secrets. Not for Play Store, which we don't use.
-      - run: cd forwarder-android && ./gradlew assembleDebug --no-daemon
+      # Release-signed: Play Protect auto-blocks browser-sideloaded SMS apps in
+      # India, and every distribution channel (Obtainium/F-Droid/Play) needs a
+      # stable signature. Keystore lives in repo secrets (see docs/forwarder-release.md).
+      - name: Decode signing keystore
+        run: echo "${{ secrets.FORWARDER_KEYSTORE_B64 }}" | base64 -d > /tmp/forwarder-release.p12
+      - run: cd forwarder-android && ./gradlew assembleRelease --no-daemon
+        env:
+          FORWARDER_KEYSTORE: /tmp/forwarder-release.p12
+          FORWARDER_KEYSTORE_PASSWORD: ${{ secrets.FORWARDER_KEYSTORE_PASSWORD }}
       # the PWA download button expects this exact asset name at releases/latest
-      - run: cp forwarder-android/app/build/outputs/apk/debug/app-debug.apk splitstream-forwarder.apk
+      - run: cp forwarder-android/app/build/outputs/apk/release/app-release.apk splitstream-forwarder.apk
       - uses: softprops/action-gh-release@v2
         with:
           # manual runs have no tag, so mint one from the run number

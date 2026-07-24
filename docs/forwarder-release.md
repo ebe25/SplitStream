@@ -5,6 +5,39 @@ The PWA's "Get the forwarder" button points at
 so every release just needs an asset named exactly `splitstream-forwarder.apk`
 on the latest release. Two ways to get one there:
 
+## Signing (one-time setup)
+
+CI builds a **release-signed** APK (Play Protect auto-blocks browser-sideloaded
+SMS apps in India, and Obtainium/F-Droid/Play all need a stable signature).
+The PKCS12 keystore lives in `secrets/` locally (gitignored — **back it up**;
+losing it means a new signature and every user reinstalls) and in two repo
+Actions secrets:
+
+- `FORWARDER_KEYSTORE_B64` — contents of `secrets/forwarder-keystore.b64`
+- `FORWARDER_KEYSTORE_PASSWORD` — contents of `secrets/forwarder-keystore-password.txt`
+
+Set them at GitHub → repo Settings → Secrets and variables → Actions, or:
+
+```sh
+gh secret set FORWARDER_KEYSTORE_B64 < secrets/forwarder-keystore.b64
+gh secret set FORWARDER_KEYSTORE_PASSWORD < secrets/forwarder-keystore-password.txt
+```
+
+Signature change vs old debug builds: existing installs must uninstall the old
+forwarder first (device re-pairs via QR in seconds).
+
+## Install path for users (why Obtainium)
+
+Browser-downloaded APKs declaring `RECEIVE_SMS` are **auto-blocked by Play
+Protect** in India (no user override; release signing doesn't help), and
+intent-based sideloads trigger Android 13+ "restricted settings" for
+notification access. Session-based installers are exempt from both — the PWA
+Settings card therefore walks users through Obtainium
+(`obtainium://add/https://github.com/ebe25/SplitStream`), keeping direct APK
+as fallback. Longer-term: Play internal testing track (100 testers; SMS
+allowed under the "SMS-based money management" policy exception) once a Play
+Console account exists.
+
 ## CI path (recommended)
 
 Commit the forwarder code, then:

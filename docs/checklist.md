@@ -90,6 +90,21 @@ _Last updated: 2026-07-24_
 - [x] Auth mascot (2026-07-24): pointer-tracking "friends" mascot shipped — two pine faces + marigold ₹ coin with flowing stream dashes; hover/tap splits the coin into chips flying to each friend; eyes + 3D tilt follow cursor/touch, spring pop-in, idle float + blink (reduced-motion respected). Code-built in motion after grill (Rive runtime skipped); alternate split-coin concept kept as `MascotSplitCoin` in anim.tsx — one-word swap in auth.tsx to compare
 - [x] Motion pass (2026-07-24): `motion` + `lottie-react` added — `src/anim.tsx` (Lottie pine-arc `Loading` replacing 5 text states, `PageFade` route transitions keyed on pathname + reduced-motion respected, `Confetti` burst); GroupDetail celebrations on settlement confirm/record + transition-to-settled banner, spring layout anims on settle-up/settlement rows, whileTap on pay buttons; favicon + apple-touch-icon linked in index.html; 47 tests + build green, auth page verified in browser
 
+## Phase 5 — Capture resilience: multi-VPA + UPI-app notifications (ADR 0002)
+- [x] Bug root-caused (2026-07-24): ICICI SMS unparsed — sender gate `ICICIB` missed `AD-ICICIT-S`, counterparty regex missed multi-word names; retry blocked by `raw_sms_user_dedupe`
+- [x] Parser: sender gating removed (body format = bank fingerprint), multi-word counterparty; real SMS added to fixtures (48 tests green) — deployed `ce1510a`
+- [x] Reliability: ingest marks `parsed` only after ledger work (crash ⇒ resumable `pending`); shared pipeline extracted to `_shared/pipeline.ts`
+- [x] `reprocess` sweep (table-as-queue): re-parse stuck pending/failed, re-route traceless unrouted txns; hourly pg_cron (`0008`), `pnpm reprocess` manual trigger — deployed + verified live (stuck ₹10 row healed)
+- [x] Deep research (adversarially verified, 2026-07-24): NPCI handle→provider→bank map (65 rows), Jun-2026 volume ranking, API-access verdict (none exists — merchant-scoped only); notification formats UNVERIFIABLE from web — must capture real samples
+- [x] ADR 0002 written: SMS primary + notifications secondary via forwarder NotificationListenerService, body-format-only matching, multi-VPA, static suffix map
+- [x] `0009_user_vpas.sql`: `user_vpas` table (owner RLS + pgTAP, 40 db tests green), backfill from `profiles.upi_vpa` — applied locally, cloud push pending (`raw_sms.source` deferred to notification step)
+- [x] Post-login UPI gate (`RequireVpa` in `vpas.tsx`): first login blocks on adding ≥1 UPI ID (skippable, persisted); shared `VpaEditor` chips UI also replaces the single-VPA field in Settings; `profiles.upi_vpa` auto-syncs to oldest VPA (pay links unchanged)
+- [x] `buildContext` unions co-member VPAs from `user_vpas` with legacy `profiles.upi_vpa` — settlement matching sees every registered VPA
+- [ ] `vpaProviders.ts` in `packages/shared`: suffix→provider map from ADR 0002 + lookup; unknown-suffix ⇒ review item
+- [ ] Forwarder: `NotificationListenerService` + package whitelist (GPay/PhonePe/Paytm), capture mode (forward raw title+text as `source: 'app_notification'`)
+- [ ] Notification templates from captured samples (`fixtures/notifications/corpus.json`) → `pnpm reprocess` heals capture backlog
+- [ ] Acceptance: pay via GPay on a bank whose SMS template we lack → transaction still lands (notification path); second VPA settlement match works
+
 ### Parked (revisit once real usage exists)
 - [ ] CSV export (per-group + personal)
 - [ ] Category budgets + monthly personal report

@@ -51,6 +51,17 @@ export const templates: SmsTemplate[] = [
     extract: m => ({ direction: 'debit', amount: paise(m[2]), counterparty_raw: m[6], account_tail: m[1], bank_ref: m[7], occurred_at: iso(m[3], m[4], m[5]) }),
   },
   {
+    id: 'icici-upi-credit',
+    bodyPattern: new RegExp(`Acct \\w*?(\\d+) is credited with ${AMT} on (\\d{2})-(\\w{3})-(\\d{2}) from (.+?)\\. UPI:(\\d+)`, 'i'),
+    extract: m => ({ direction: 'credit', amount: paise(m[2]), counterparty_raw: m[6], account_tail: m[1], bank_ref: m[7], occurred_at: iso(m[3], m[4], m[5]) }),
+  },
+  {
+    id: 'kotak-upi-credit',
+    // "…on 24-07-26.UPI Ref:…" — no space after the date's period
+    bodyPattern: new RegExp(`Received ${AMT} in your Kotak Bank AC \\w*?(\\d+) from (.+?) on (\\d{2})-(\\d{2})-(\\d{2})\\.\\s*UPI Ref:\\s*(\\d+)`, 'i'),
+    extract: m => ({ direction: 'credit', amount: paise(m[1]), counterparty_raw: m[3], account_tail: m[2], bank_ref: m[7], occurred_at: iso(m[4], m[5], m[6]) }),
+  },
+  {
     id: 'sbi-upi-debit',
     // SBI UPI debits carry a bare amount with no Rs/INR prefix
     bodyPattern: /A\/C \w*?(\d+) debited by ([\d,]+(?:\.\d{1,2})?) on date (\d{2})(\w{3})(\d{2}) trf to (.+?) Refno (\d+)/i,

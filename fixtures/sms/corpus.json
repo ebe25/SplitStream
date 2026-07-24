@@ -179,5 +179,31 @@
       "bank_ref": "657149891138",
       "occurred_at": "2026-07-24"
     }
+  },
+  {
+    "name": "icici upi credit, multi-word payer name",
+    "sender": "AD-ICICIT-S",
+    "body": "Dear Customer, Acct XX317 is credited with Rs 10.00 on 24-Jul-26 from Vedansh Bisht. UPI:620503930629-ICICI Bank.",
+    "expected": {
+      "direction": "credit",
+      "amount": 1000,
+      "counterparty_raw": "Vedansh Bisht",
+      "account_tail": "317",
+      "bank_ref": "620503930629",
+      "occurred_at": "2026-07-24"
+    }
+  },
+  {
+    "name": "kotak upi credit",
+    "sender": "JD-KOTAKB-S",
+    "body": "Received Rs.10.00 in your Kotak Bank AC X5279 from vdnh.bisht-2@oksbi on 24-07-26.UPI Ref:620503999550.",
+    "expected": {
+      "direction": "credit",
+      "amount": 1000,
+      "counterparty_raw": "vdnh.bisht-2@oksbi",
+      "account_tail": "5279",
+      "bank_ref": "620503999550",
+      "occurred_at": "2026-07-24"
+    }
   }
 ]

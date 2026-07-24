@@ -44,6 +44,18 @@ export async function buildContext(supabase: SupabaseClient, ownerId: string) {
       const vpa = (m.profiles as unknown as { upi_vpa: string | null } | null)?.upi_vpa?.toLowerCase();
       if (vpa) vpaMembers[vpa] = { member_user_id: m.user_id, shared_open_group_ids: memberGroups.get(m.user_id)! };
     }
+
+    // (b2) every additional VPA a co-member registered (multi-VPA, ADR 0002)
+    const { data: memberVpas } = await supabase
+      .from('user_vpas')
+      .select('user_id, vpa')
+      .in('user_id', [...memberGroups.keys()]);
+    for (const v of memberVpas ?? []) {
+      vpaMembers[v.vpa.toLowerCase()] = {
+        member_user_id: v.user_id,
+        shared_open_group_ids: memberGroups.get(v.user_id)!,
+      };
+    }
   }
 
   // (c) explicit payee identities extend/override the VPA map

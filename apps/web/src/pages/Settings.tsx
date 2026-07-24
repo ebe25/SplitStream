@@ -5,6 +5,7 @@ import { useInstall } from '../install'
 import { enablePush, pushEnabled } from '../push'
 import { supabase, type Group, type Rule } from '../supabase'
 import { btn, btnGhost, card, errorCls, Header, input, labelCls } from '../ui'
+import { useVpas, VpaEditor } from '../vpas'
 
 // CI/release must publish the APK under this exact asset name.
 const FORWARDER_APK_URL = 'https://github.com/ebe25/SplitStream/releases/latest/download/splitstream-forwarder.apk'
@@ -12,23 +13,19 @@ const FORWARDER_APK_URL = 'https://github.com/ebe25/SplitStream/releases/latest/
 export function Settings() {
   const userId = useUserId()
   const [displayName, setDisplayName] = useState('')
-  const [upiVpa, setUpiVpa] = useState('')
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!userId) return
-    supabase.from('profiles').select('display_name, upi_vpa').eq('id', userId).single()
-      .then(({ data }) => {
-        setDisplayName(data?.display_name ?? '')
-        setUpiVpa(data?.upi_vpa ?? '')
-      })
+    supabase.from('profiles').select('display_name').eq('id', userId).single()
+      .then(({ data }) => setDisplayName(data?.display_name ?? ''))
   }, [userId])
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     const { error } = await supabase.from('profiles')
-      .update({ display_name: displayName || null, upi_vpa: upiVpa || null }).eq('id', userId)
+      .update({ display_name: displayName || null }).eq('id', userId)
     if (error) setError(error.message)
     else { setSaved(true); setTimeout(() => setSaved(false), 2000) }
   }
@@ -42,13 +39,11 @@ export function Settings() {
           <label htmlFor="name" className={labelCls}>Display name</label>
           <input id="name" className={`${input} mt-1`} value={displayName} onChange={e => setDisplayName(e.target.value)} />
         </div>
-        <div>
-          <label htmlFor="vpa" className={labelCls}>UPI VPA <span className="font-normal text-faint">(for settle-up links, Phase 3)</span></label>
-          <input id="vpa" className={`${input} mt-1`} placeholder="you@upi" value={upiVpa} onChange={e => setUpiVpa(e.target.value)} />
-        </div>
         <button className={btn}>{saved ? 'Saved ✓' : 'Save'}</button>
         {error && <p className={errorCls} role="alert">{error}</p>}
       </form>
+
+      <Vpas />
 
       <Notifications />
 
@@ -66,6 +61,17 @@ export function Settings() {
         </button>
       </div>
     </main>
+  )
+}
+
+function Vpas() {
+  const { vpas, load } = useVpas()
+  if (vpas === null) return null
+  return (
+    <div className={`${card} mt-4 space-y-3`}>
+      <p className={labelCls}>UPI IDs <span className="font-normal text-faint">(settle-up matching + pay links)</span></p>
+      <VpaEditor vpas={vpas} onChange={load} />
+    </div>
   )
 }
 

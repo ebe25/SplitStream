@@ -3,73 +3,157 @@
     "name": "hdfc upi debit",
     "sender": "VM-HDFCBK",
     "body": "Rs 450.50 debited from a/c XX1234 on 19-07-26 to VPA merchant@ybl (UPI Ref 519912345678). Not you? Call 18002586161 -HDFC Bank",
-    "expected": { "direction": "debit", "amount": 45050, "counterparty_raw": "merchant@ybl", "account_tail": "1234", "bank_ref": "519912345678", "occurred_at": "2026-07-19" }
+    "expected": {
+      "direction": "debit",
+      "amount": 45050,
+      "counterparty_raw": "merchant@ybl",
+      "account_tail": "1234",
+      "bank_ref": "519912345678",
+      "occurred_at": "2026-07-19"
+    }
   },
   {
     "name": "hdfc upi debit with comma amount",
     "sender": "VM-HDFCBK",
     "body": "Rs. 1,234.56 debited from a/c XX1234 on 15-07-26 to VPA grocerystore@okicici (UPI Ref 519900112233). Not you? Call 18002586161 -HDFC Bank",
-    "expected": { "direction": "debit", "amount": 123456, "counterparty_raw": "grocerystore@okicici", "account_tail": "1234", "bank_ref": "519900112233", "occurred_at": "2026-07-15" }
+    "expected": {
+      "direction": "debit",
+      "amount": 123456,
+      "counterparty_raw": "grocerystore@okicici",
+      "account_tail": "1234",
+      "bank_ref": "519900112233",
+      "occurred_at": "2026-07-15"
+    }
   },
   {
     "name": "hdfc upi credit",
     "sender": "VM-HDFCBK",
     "body": "Rs 1,200.00 credited to a/c XX1234 on 18-07-26 by a/c linked to VPA rahul.k@okhdfcbank (UPI Ref 519987654321) -HDFC Bank",
-    "expected": { "direction": "credit", "amount": 120000, "counterparty_raw": "rahul.k@okhdfcbank", "account_tail": "1234", "bank_ref": "519987654321", "occurred_at": "2026-07-18" }
+    "expected": {
+      "direction": "credit",
+      "amount": 120000,
+      "counterparty_raw": "rahul.k@okhdfcbank",
+      "account_tail": "1234",
+      "bank_ref": "519987654321",
+      "occurred_at": "2026-07-18"
+    }
   },
   {
     "name": "icici upi debit",
     "sender": "AD-ICICIB",
     "body": "ICICI Bank Acct XX456 debited for Rs 89.00 on 19-Jul-26; chaiwala@paytm credited. UPI:519911223344. Call 18002662 for dispute. SMS BLOCK 456 to 9215676766.",
-    "expected": { "direction": "debit", "amount": 8900, "counterparty_raw": "chaiwala@paytm", "account_tail": "456", "bank_ref": "519911223344", "occurred_at": "2026-07-19" }
+    "expected": {
+      "direction": "debit",
+      "amount": 8900,
+      "counterparty_raw": "chaiwala@paytm",
+      "account_tail": "456",
+      "bank_ref": "519911223344",
+      "occurred_at": "2026-07-19"
+    }
   },
   {
     "name": "icici upi debit with comma amount",
     "sender": "AD-ICICIB",
     "body": "ICICI Bank Acct XX456 debited for Rs 2,150.75 on 12-Jul-26; bigbazaar@ybl credited. UPI:519955001122. Call 18002662 for dispute.",
-    "expected": { "direction": "debit", "amount": 215075, "counterparty_raw": "bigbazaar@ybl", "account_tail": "456", "bank_ref": "519955001122", "occurred_at": "2026-07-12" }
+    "expected": {
+      "direction": "debit",
+      "amount": 215075,
+      "counterparty_raw": "bigbazaar@ybl",
+      "account_tail": "456",
+      "bank_ref": "519955001122",
+      "occurred_at": "2026-07-12"
+    }
   },
   {
     "name": "sbi upi debit",
     "sender": "AD-SBIUPI",
     "body": "Dear UPI user A/C X5678 debited by 145.5 on date 19Jul26 trf to SWIGGY Refno 519955667788. If not u? call 1800111109. -SBI",
-    "expected": { "direction": "debit", "amount": 14550, "counterparty_raw": "SWIGGY", "account_tail": "5678", "bank_ref": "519955667788", "occurred_at": "2026-07-19" }
+    "expected": {
+      "direction": "debit",
+      "amount": 14550,
+      "counterparty_raw": "SWIGGY",
+      "account_tail": "5678",
+      "bank_ref": "519955667788",
+      "occurred_at": "2026-07-19"
+    }
   },
   {
     "name": "sbi upi debit whole rupees",
     "sender": "AD-SBIUPI",
     "body": "Dear UPI user A/C X5678 debited by 60.0 on date 11Jul26 trf to AUTO DRIVER Refno 519900998877. If not u? call 1800111109. -SBI",
-    "expected": { "direction": "debit", "amount": 6000, "counterparty_raw": "AUTO DRIVER", "account_tail": "5678", "bank_ref": "519900998877", "occurred_at": "2026-07-11" }
+    "expected": {
+      "direction": "debit",
+      "amount": 6000,
+      "counterparty_raw": "AUTO DRIVER",
+      "account_tail": "5678",
+      "bank_ref": "519900998877",
+      "occurred_at": "2026-07-11"
+    }
   },
   {
     "name": "sbi upi credit",
     "sender": "CP-SBIINB",
     "body": "Dear SBI User, your A/c X5678-credited by Rs.2,500 on 19Jul26 transfer from RAHUL KUMAR Ref No 519944556677 -SBI",
-    "expected": { "direction": "credit", "amount": 250000, "counterparty_raw": "RAHUL KUMAR", "account_tail": "5678", "bank_ref": "519944556677", "occurred_at": "2026-07-19" }
+    "expected": {
+      "direction": "credit",
+      "amount": 250000,
+      "counterparty_raw": "RAHUL KUMAR",
+      "account_tail": "5678",
+      "bank_ref": "519944556677",
+      "occurred_at": "2026-07-19"
+    }
   },
   {
     "name": "axis debit card spend",
     "sender": "AX-AXISBK",
     "body": "Spent Card no. XX7890 INR 1,299.00 19-07-26 18:32:10 AMAZON RETAIL Avl Lmt INR 45,000.00 SMS BLOCK 7890 to 919951860002, if not you - Axis Bank",
-    "expected": { "direction": "debit", "amount": 129900, "counterparty_raw": "AMAZON RETAIL", "account_tail": "7890", "bank_ref": null, "occurred_at": "2026-07-19" }
+    "expected": {
+      "direction": "debit",
+      "amount": 129900,
+      "counterparty_raw": "AMAZON RETAIL",
+      "account_tail": "7890",
+      "bank_ref": null,
+      "occurred_at": "2026-07-19"
+    }
   },
   {
     "name": "axis debit card spend with paise",
     "sender": "AX-AXISBK",
     "body": "Spent Card no. XX7890 INR 349.50 14-07-26 09:12:45 ZOMATO Avl Lmt INR 43,701.00 SMS BLOCK 7890 to 919951860002, if not you - Axis Bank",
-    "expected": { "direction": "debit", "amount": 34950, "counterparty_raw": "ZOMATO", "account_tail": "7890", "bank_ref": null, "occurred_at": "2026-07-14" }
+    "expected": {
+      "direction": "debit",
+      "amount": 34950,
+      "counterparty_raw": "ZOMATO",
+      "account_tail": "7890",
+      "bank_ref": null,
+      "occurred_at": "2026-07-14"
+    }
   },
   {
     "name": "hdfc credit card spend",
     "sender": "VM-HDFCBK",
     "body": "Alert: You've spent Rs.3,450.75 On HDFC Bank CREDIT Card xx4321 At BIGBASKET On 2026-07-19:14:22:33 Avl bal: Rs.96,549.25 Not you? Call 18002586161.",
-    "expected": { "direction": "debit", "amount": 345075, "counterparty_raw": "BIGBASKET", "account_tail": "4321", "bank_ref": null, "occurred_at": "2026-07-19" }
+    "expected": {
+      "direction": "debit",
+      "amount": 345075,
+      "counterparty_raw": "BIGBASKET",
+      "account_tail": "4321",
+      "bank_ref": null,
+      "occurred_at": "2026-07-19"
+    }
   },
   {
     "name": "neft salary credit",
     "sender": "VM-HDFCBK",
     "body": "Update! INR 85,000.00 deposited in HDFC Bank A/c XX1234 on 01-JUL-26 for NEFT Cr-HDFC0000001-DELIGHTREE PVT LTD-VEDANSH-N201261234567890. Avl bal INR 1,10,000.00",
-    "expected": { "direction": "credit", "amount": 8500000, "counterparty_raw": "DELIGHTREE PVT LTD", "account_tail": "1234", "bank_ref": "N201261234567890", "occurred_at": "2026-07-01" }
+    "expected": {
+      "direction": "credit",
+      "amount": 8500000,
+      "counterparty_raw": "DELIGHTREE PVT LTD",
+      "account_tail": "1234",
+      "bank_ref": "N201261234567890",
+      "occurred_at": "2026-07-01"
+    }
   },
   {
     "name": "hdfc otp must not parse",
@@ -82,5 +166,18 @@
     "sender": "AM-FLPKRT",
     "body": "Big Billion Days are here! Get up to Rs 5,000 cashback on your first order. Shop now: fkrt.it/abc123 T&C apply.",
     "expected": null
+  },
+  {
+    "name": "icici upi debit, ICICIT sender + multi-word payee name",
+    "sender": "AD-ICICIT-S",
+    "body": "ICICI Bank Acct XX672 debited for Rs 10.00 on 24-Jul-26; VEDANSH BISHT credited. UPI:657149891138. Call 18002662 for dispute. SMS BLOCK 672 to 9215676766.",
+    "expected": {
+      "direction": "debit",
+      "amount": 1000,
+      "counterparty_raw": "VEDANSH BISHT",
+      "account_tail": "672",
+      "bank_ref": "657149891138",
+      "occurred_at": "2026-07-24"
+    }
   }
 ]

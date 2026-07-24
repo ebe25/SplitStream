@@ -13,7 +13,7 @@ const corpus: Fixture[] = JSON.parse(
 describe('parseSms', () => {
   for (const f of corpus) {
     it(f.name, () => {
-      expect(parseSms(f.sender, f.body)).toEqual(f.expected)
+      expect(parseSms(f.body)).toEqual(f.expected)
     })
   }
 })

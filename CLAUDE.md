@@ -10,6 +10,7 @@ Expense-splitting app: pnpm monorepo (PWA in `apps/`, shared parser/route in `pa
 - `pnpm sync:functions` — copy parser/route into `supabase/functions/_shared/`
 - `pnpm ship` — db push + sync + deploy edge functions
 - `pnpm logs` — snapshot debugging context into `logs/<timestamp>/`
+- `pnpm reprocess` — manually trigger the cloud reprocess sweep (re-parse stuck SMS, re-route stuck transactions); run after shipping a parser fix
 
 ## Debugging convention
 
